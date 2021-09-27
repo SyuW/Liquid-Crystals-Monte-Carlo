@@ -1,2 +1,7 @@
-# 2DLiquidCrystals
-Phys 437A project -- 2D Liquid Crystals
+# LiquidCrystals
+Dedicated GitHub repo for simulating 2D liquid crystals
+
+# Contributors
+- Mohammad Ayyash
+- Bo Zhang
+- Sam Yu

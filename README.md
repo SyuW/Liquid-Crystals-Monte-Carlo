@@ -1,5 +1,5 @@
 # LiquidCrystals
-Dedicated GitHub repo for simulating 2D liquid crystals
+Confined liquid crystal simulations
 
 # Contributors
 - Mohammad Ayyash

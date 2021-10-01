@@ -45,15 +45,14 @@ def calculate_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
     :return: dist: distance of closest approach
     """
     # eccentricities
-    e1 = np.sqrt(1 - (b1 ** 2) / (a1 ** 2))
-    e2 = np.sqrt(1 - (b2 ** 2) / (a2 ** 2))
+    e1 = np.sqrt(1 - b1 ** 2 / a1 ** 2)
+    e2 = np.sqrt(1 - b2 ** 2 / a2 ** 2)
     # anisotropic scaling parameter
     eta = a1 / b1 - 1
     # components of A'
-    a11 = ((b1 ** 2) / (b2 ** 2)) * (1 + 0.5 * (1 + k1k2) * (eta * (2 + eta) - (e2 ** 2) * (1 + eta * k1k2) ** 2))
-    a22 = ((b1 ** 2) / (b2 ** 2)) * (1 + 0.5 * (1 - k1k2) * (eta * (2 + eta) - (e2 ** 2) * (1 - eta * k1k2) ** 2))
-    a12 = ((b1 ** 2) / (b2 ** 2)) * 0.5 * np.sqrt(1 - (k1k2 ** 2)) * (
-            eta * (2 + eta) + (e2 ** 2) * (1 - (eta * k1k2) ** 2))
+    a11 = b1 ** 2 / b2 ** 2 * (1 + 0.5 * (1 + k1k2) * (eta * (2 + eta) - e2 * (1 + eta * k1k2) ** 2))
+    a12 = b1 ** 2 / b2 ** 2 * 0.5 * np.sqrt(1 - k1k2 ** 2) * (eta * (2 + eta) + e2 * (1 - (eta * k1k2) ** 2))
+    a22 = b1 ** 2 / b2 ** 2 * (1 + 0.5 * (1 - k1k2) * (eta * (2 + eta) - e2 * (1 - eta * k1k2) ** 2))
     # eigenvalues of A'
     lambda1 = 0.5 * (a11 + a22) + 0.5 * np.sqrt((a11 - a22) ** 2 + 4 * (a12 ** 2))
     lambda2 = 0.5 * (a11 + a22) + 0.5 * np.sqrt((a11 - a22) ** 2 + 4 * (a12 ** 2))
@@ -62,16 +61,16 @@ def calculate_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
     a2p = 1 / np.sqrt(lambda2)
 
     delta = (a2p / b2p) ** 2 - 1
-    # if the angle between the two transformed major axes is small
+    # if the angle between the transformed major axes is small
     if abs(k1k2) == 1:
         if a11 > a22:
-            kpmpd = (1 / np.sqrt(1 - e1 * k1d ** 2)) * (b1 / a1) * k1d
+            kpmpd = 1 / np.sqrt(1 - e1 * k1d ** 2) * b1 / a1 * k1d
         elif a11 < a22:
             kpmpd = np.sqrt(1 - k1d ** 2) / np.sqrt(1 - e1 * k1d ** 2)
 
     # determine k1d in transformed coordinate system
     else:
-        kpmpd = ((a12 / np.sqrt(1 + k1k2)) * (b1 / a1 * k1d + k2d + (b1 / a1 - 1) * k1d * k1k2)
+        kpmpd = (a12 / np.sqrt(1 + k1k2) * (b1 / a1 * k1d + k2d + (b1 / a1 - 1) * k1d * k1k2)
                  + (lambda1 - a11) / np.sqrt(1 - k1k2) * (b1 / a1 * k1d - k2d - (b1 / a1 - 1) * k1d * k1k2)) \
                 / (np.sqrt(2 * (a12 ** 2 + (lambda1 - a11) ** 2) * (1 - (e1 * k1d) ** 2)))
 
@@ -120,13 +119,13 @@ def compute_ellipse_wall():
 
 
 class TestClosestApproachDistance(unittest.TestCase):
-    @staticmethod
-    def run_test_cases():
+    def test_closest_approach_distance(self):
         test_cases = [{"inputs": (3, 1, 5, 1, 0, 0), "expected": 8},
                       {"inputs": (5, 1, 2, 0.25, np.pi / 2, 0), "expected": 1.25},
                       {"inputs": (9, 2, 5, 0.25, 5 * np.pi / 6, np.pi / 3), "expected": 7}]
         for case in test_cases:
-            expected = test_cases["expected"]
-            a1, b1, a2, b2, theta1, theta2 = test_cases["inputs"]
+            expected = case["expected"]
+            a1, b1, a2, b2, theta1, theta2 = case["inputs"]
             actual = calculate_closest_approach(a1=a1, b1=b1, a2=a2, b2=b2,
                                                 k1d=np.cos(theta1), k2d=np.cos(theta2), k1k2=np.cos(theta1-theta2))
+            self.assertEqual(expected, actual)

@@ -124,17 +124,32 @@ def calculate_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
 
 
 def compute_ellipse_line_intersection(theta, x_c, y_c, a, b, k, d):
-    # discriminant for determining intersection with arbitrary line
-    disc = (d * k * math.cos(theta) ** 2 / b ** 2 + d * k * math.sin(theta) ** 2 / a ** 2 - k * y_c * math.cos(
-        theta) / b ** 2 + k * x_c * math.sin(theta) / a ** 2 - d * math.cos(theta) * math.sin(
-        theta) / a ** 2 + d * math.cos(theta) * math.sin(theta) / b ** 2 - x_c * math.cos(
-        theta) / a ** 2 - y_c * math.sin(
-        theta) / b ** 2) ** 2 - (
-            d ** 2 * math.cos(theta) ** 2 / b ** 2 + d ** 2 * math.sin(theta) ** 2 / a ** 2 - 2 * d * y_c * math.cos(
-        theta) / b ** 2 + 2 * d * x_c * math.sin(theta) / a ** 2 + x_c ** 2 / a ** 2 + y_c ** 2 / b ** 2 - 1) * (
-            k ** 2 * math.cos(theta) ** 2 / b ** 2 + k ** 2 * math.sin(theta) ** 2 / a ** 2 - 2 * k * math.cos(
-        theta) * math.sin(theta) / a ** 2 + 2 * k * math.cos(theta) * math.sin(theta) / b ** 2 + math.cos(
-        theta) ** 2 / a ** 2 + math.sin(theta) ** 2 / b ** 2)
+    # discriminant for determining intersection with arbitrary line: y = kx + d
+    if k.isnumeric():
+        disc = (d * k * math.cos(theta) ** 2 / b ** 2 + d * k * math.sin(theta) ** 2 / a ** 2 - k * y_c * math.cos(
+            theta) / b ** 2 + k * x_c * math.sin(theta) / a ** 2 - d * math.cos(theta) * math.sin(
+            theta) / a ** 2 + d * math.cos(theta) * math.sin(theta) / b ** 2 - x_c * math.cos(
+            theta) / a ** 2 - y_c * math.sin(
+            theta) / b ** 2) ** 2 - (
+                       d ** 2 * math.cos(theta) ** 2 / b ** 2 + d ** 2 * math.sin(
+                   theta) ** 2 / a ** 2 - 2 * d * y_c * math.cos(
+                   theta) / b ** 2 + 2 * d * x_c * math.sin(
+                   theta) / a ** 2 + x_c ** 2 / a ** 2 + y_c ** 2 / b ** 2 - 1) * (
+                       k ** 2 * math.cos(theta) ** 2 / b ** 2 + k ** 2 * math.sin(
+                   theta) ** 2 / a ** 2 - 2 * k * math.cos(
+                   theta) * math.sin(theta) / a ** 2 + 2 * k * math.cos(theta) * math.sin(theta) / b ** 2 + math.cos(
+                   theta) ** 2 / a ** 2 + math.sin(theta) ** 2 / b ** 2)
+    # degenerate case where line is vertical" x = d
+    elif k == "inf":
+        disc = (d * math.cos(theta) * math.sin(theta) / a ** 2 - d * math.cos(theta) * math.sin(theta) / b ** 2
+                + y_c * math.cos(theta) / b ** 2 - x_c * math.sin(theta) / a ** 2) ** 2 \
+               - (d ** 2 * math.cos(theta) ** 2 / a ** 2 + d ** 2 * math.sin(theta) ** 2 / b ** 2
+                  - 2 * d * x_c * math.cos(theta) / a ** 2 - 2 * d * y_c * math.sin(theta) / b ** 2 + x_c ** 2 / a ** 2
+                  + y_c ** 2 / b ** 2 - 1) * (math.cos(theta) ** 2 / b ** 2 + math.sin(theta) ** 2 / a ** 2)
+    else:
+        raise ValueError("k must be numeric or 'inf'")
+
+    print(disc)
 
     if disc > 0:
         return True
@@ -143,7 +158,7 @@ def compute_ellipse_line_intersection(theta, x_c, y_c, a, b, k, d):
 
 
 def main():
-    compute_ellipse_line_intersection(0.5, -1.5, 1, 2.2, 1, 0.3, 0)
+    compute_ellipse_line_intersection(0.5, 0.1, 1, 2.2, 1, 'inf', 2.6)
     return
 
 

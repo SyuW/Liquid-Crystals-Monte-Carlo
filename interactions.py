@@ -1,5 +1,8 @@
 import numpy as np
+import math
 import unittest
+
+import math
 
 
 # TODO: eclipse-line intersection, eclipse-eclipse intersection
@@ -50,13 +53,13 @@ def calculate_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
     # anisotropic scaling parameter
     eta = a1 / b1 - 1
     # components of A'
-    a11 = (b1 / b2) ** 2 * (1 + 0.5 * (1 + k1k2)        * (eta * (2 + eta) - e2 * (1 + eta * k1k2) ** 2))
-    a22 = (b1 / b2) ** 2 * (1 + 0.5 * (1 - k1k2)        * (eta * (2 + eta) - e2 * (1 - eta * k1k2) ** 2))
+    a11 = (b1 / b2) ** 2 * (1 + 0.5 * (1 + k1k2) * (eta * (2 + eta) - e2 * (1 + eta * k1k2) ** 2))
+    a22 = (b1 / b2) ** 2 * (1 + 0.5 * (1 - k1k2) * (eta * (2 + eta) - e2 * (1 - eta * k1k2) ** 2))
     a12 = (b1 / b2) ** 2 * 0.5 * np.sqrt(1 - k1k2 ** 2) * (eta * (2 + eta) + e2 * (1 - (eta * k1k2) ** 2))
     # eigenvalues of A'
     lambda1 = 0.5 * (a11 + a22) + 0.5 * np.sqrt((a11 - a22) ** 2 + 4 * (a12 ** 2))
     lambda2 = 0.5 * (a11 + a22) - 0.5 * np.sqrt((a11 - a22) ** 2 + 4 * (a12 ** 2))
-    # major and minor axes of transformed ellipse
+    # major and minor axes lengths of transformed ellipse
     b2p = 1 / np.sqrt(lambda1)
     a2p = 1 / np.sqrt(lambda2)
 
@@ -72,72 +75,103 @@ def calculate_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
 
     # determine k1d in transformed coordinate system
     else:
-        kpmpd = (a12 / np.sqrt(1 + k1k2) * (b1 / a1 * k1d + k2d + (b1 / a1 - 1) * k1d * k1k2)
+        kpmpd = (a12 / (1 + k1k2) ** .5 * (b1 / a1 * k1d + k2d + (b1 / a1 - 1) * k1d * k1k2)
                  + (lambda1 - a11) / np.sqrt(1 - k1k2) * (b1 / a1 * k1d - k2d - (b1 / a1 - 1) * k1d * k1k2)) \
-                / (np.sqrt(2 * (a12 ** 2 + (lambda1 - a11) ** 2) * (1 - (e1 * k1d) ** 2)))
+                / ((2 * (a12 ** 2 + (lambda1 - a11) ** 2) * (1 - (e1 * k1d) ** 2)) ** .5)
 
-    if kpmpd == 0 or delta == 0:
+    if abs(kpmpd) <= 1e-7 or abs(delta) <= 1e-7:
         dp = a2p + 1
     else:
         # coefficients of quartic for q
-        t = 1 / (kpmpd ** 2) - 1
-        A = -1 / (b2p ** 2 * (1 + t))
-        B = -2 / (b2p * (1 + t + delta))
-        C = -t - (1 + delta) ** 2 + (1 / b2p ** 2) * (1 + t + delta * t)
+        t = 1 / kpmpd ** 2 - 1
+        A = -1 / b2p ** 2 * (1 + t)
+        B = -2 / b2p * (1 + t + delta)
+        C = -t - (1 + delta) ** 2 + 1 / b2p ** 2 * (1 + t + delta * t)
         D = 2 / b2p * (1 + t) * (1 + delta)
         E = (1 + t + delta) * (1 + delta)
 
         # solution for quartic
         alpha = -3 / 8 * (B / A) ** 2 + C / A
         beta = (B / A) ** 3 / 8 - (B / A) * (C / A) / 2 + D / A
-        gamma = -3 / 256 * (B / A) ** 4 + C / A * (B / A) ** 2 / 16 - (B / A) * (D / A) / 4 + E / A
+        gamma = -3 / 256 * (B / A) ** 4 + (C / A) * (B / A) ** 2 / 16 - (B / A) * (D / A) / 4 + E / A
 
-        if beta == 0:
-            qq = -B / (4 * A) + np.sqrt((-alpha + np.sqrt(alpha ** 2 - 4 * gamma)) / 2)
+        # beta = 0 degenerate case
+        if abs(beta) <= 1e-7:
+            qq = -B / (4 * A) + ((-alpha + (alpha ** 2 - 4 * gamma) ** .5) / 2) ** .5
+        # beta != 0 general case
         else:
             P = -alpha ** 2 / 12 - gamma
             Q = -alpha ** 3 / 108 + gamma * alpha / 3 - beta ** 2 / 8
-            U = (- 0.5 * Q + np.sqrt(Q ** 2 / 4 + P ** 3 / 27)) ** (1 / 3)
+            if abs(Q ** 2 / 4 + P ** 3 / 27) < 1e-15:
+                U = 0
+            else:
+                U = cube_root(-.5 * Q + (Q ** 2 / 4 + P ** 3 / 27) ** .5)
 
             if abs(U) != 0:
                 y = (-5 / 6) * alpha + U - P / (3 * U)
             else:
-                y = (-5 / 6) * alpha - Q ** (1 / 3)
+                y = (-5 / 6 * alpha - Q) ** (1 / 3)
 
-            qq = -B / (4 * A) + 0.5 * (np.sqrt(alpha + 2 * y)
-                                       + np.sqrt(-(3 * alpha + 2 * y + 2 * beta / np.sqrt(alpha + 2 * y))))
+            qq = -B / (4 * A) + .5 * ((alpha + 2 * y) ** .5
+                                      + (-(3 * alpha + 2 * y + 2 * beta / (alpha + 2 * y) ** .5)) ** .5)
 
         # substitute for R'
         dp = np.sqrt((qq ** 2 - 1) / delta * (1 + b2p * (1 + delta) / qq) ** 2
                      + (1 - (qq ** 2 - 1) / delta) * (1 + b2p / qq) ** 2)
 
-    dist = dp * b1 * (1 - e1 * k1d ** 2) ** (-1/2)
+    dist = dp * b1 / (1 - e1 * k1d ** 2) ** .5
 
-    return dist
+    return round(dist, 3)
 
 
-def compute_ellipse_wall():
+def compute_ellipse_line_intersection(theta, x_shift, y_shift, box_length):
+    
     return
 
 
 def main():
-    dist = calculate_closest_approach(a1=3, b1=1, a2=5, b2=1, k1d=1, k2d=1, k1k2=1)
+    print(cube_root(-7) ** 3)
+    theta1 = 0.2
+    dist = calculate_closest_approach(a1=3, b1=1, a2=5, b2=1,
+                                      k1d=1, k2d=1, k1k2=1)
     print(f"Obtained closest approach distance: {dist}")
 
     return
 
 
+def cube_root(z):
+    z = complex(z)
+    x = z.real
+    y = z.imag
+    r = (x ** 2 + y ** 2) ** (1 / 6)
+    theta = math.atan2(y, x) / 3
+    cbrt = complex(r*math.cos(theta), r*math.sin(theta))
+
+    return cbrt
+
+
 class TestClosestApproachDistance(unittest.TestCase):
+
+    def test_cube_root(self):
+        test_inputs = [1, 10000, -300000, -7, 5.128193898, 69e5]
+        for test_input in test_inputs:
+            actual = cube_root(test_input)
+            cube_real = round((actual ** 3).real, 8)
+            cube_imag = round((actual ** 3).imag, 8)
+            self.assertEqual(complex(test_input).real, cube_real)
+            self.assertEqual(complex(test_input).imag, cube_imag)
+
     def test_closest_approach_distance(self):
-        test_cases = [{"inputs": (3, 1, 5, 1, 0, 0), "expected": 8}, # good
-                      {"inputs": (5, 1, 2, 0.25, np.pi / 2, 0), "expected": 1.25},
+        test_cases = [{"inputs": (3, 1, 5, 1, 0, 0), "expected": 8},
+                      {"inputs": (5, 1, 2, 0.25, np.pi / 2, np.pi / 2), "expected": 1.25},
                       {"inputs": (9, 2, 5, 0.25, 5 * np.pi / 6, np.pi / 3), "expected": 7}]
         for case in test_cases:
             expected = case["expected"]
             a1, b1, a2, b2, theta1, theta2 = case["inputs"]
             actual = calculate_closest_approach(a1=a1, b1=b1, a2=a2, b2=b2,
-                                                k1d=np.cos(theta1), k2d=np.cos(theta2), k1k2=np.cos(theta1-theta2))
+                                                k1d=np.cos(theta1), k2d=np.cos(theta2), k1k2=np.cos(theta1 - theta2))
             print(f"Expected: {expected}, Actual: {actual}")
+            self.assertEqual(expected, actual)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,4 @@
 import numpy as np
-import math
 import unittest
 
 import math
@@ -124,18 +123,27 @@ def calculate_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
     return round(dist, 3)
 
 
-def compute_ellipse_line_intersection(theta, x_shift, y_shift, box_length):
-    
-    return
+def compute_ellipse_line_intersection(theta, x_c, y_c, a, b, k, d):
+    # discriminant for determining intersection with arbitrary line
+    disc = (d * k * math.cos(theta) ** 2 / b ** 2 + d * k * math.sin(theta) ** 2 / a ** 2 - k * y_c * math.cos(
+        theta) / b ** 2 + k * x_c * math.sin(theta) / a ** 2 - d * math.cos(theta) * math.sin(
+        theta) / a ** 2 + d * math.cos(theta) * math.sin(theta) / b ** 2 - x_c * math.cos(
+        theta) / a ** 2 - y_c * math.sin(
+        theta) / b ** 2) ** 2 - (
+            d ** 2 * math.cos(theta) ** 2 / b ** 2 + d ** 2 * math.sin(theta) ** 2 / a ** 2 - 2 * d * y_c * math.cos(
+        theta) / b ** 2 + 2 * d * x_c * math.sin(theta) / a ** 2 + x_c ** 2 / a ** 2 + y_c ** 2 / b ** 2 - 1) * (
+            k ** 2 * math.cos(theta) ** 2 / b ** 2 + k ** 2 * math.sin(theta) ** 2 / a ** 2 - 2 * k * math.cos(
+        theta) * math.sin(theta) / a ** 2 + 2 * k * math.cos(theta) * math.sin(theta) / b ** 2 + math.cos(
+        theta) ** 2 / a ** 2 + math.sin(theta) ** 2 / b ** 2)
+
+    if disc > 0:
+        return True
+
+    return False
 
 
 def main():
-    print(cube_root(-7) ** 3)
-    theta1 = 0.2
-    dist = calculate_closest_approach(a1=3, b1=1, a2=5, b2=1,
-                                      k1d=1, k2d=1, k1k2=1)
-    print(f"Obtained closest approach distance: {dist}")
-
+    compute_ellipse_line_intersection(0.5, -1.5, 1, 2.2, 1, 0.3, 0)
     return
 
 
@@ -145,7 +153,7 @@ def cube_root(z):
     y = z.imag
     r = (x ** 2 + y ** 2) ** (1 / 6)
     theta = math.atan2(y, x) / 3
-    cbrt = complex(r*math.cos(theta), r*math.sin(theta))
+    cbrt = complex(r * math.cos(theta), r * math.sin(theta))
 
     return cbrt
 

@@ -41,8 +41,6 @@ class LCSystem:
                     particle_positions.append(particle_pos)
             self.system_state_at_step[MC_step_no] = particle_positions
 
-        thetas = [pos[-1] for pos in particle_positions]
-        print(thetas)
         return
 
 

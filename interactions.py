@@ -44,7 +44,7 @@ def calculate_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
     :param k1k2: cosine of angle between major axis of ellipse 1 and major axis of ellipse 2
     :param k1d: cosine of angle between major axis of ellipse 1 and direction of line joining centers
     :param k2d: cosine of angle between major axis of ellipse 2 and direction of line joining centers
-    :return: dist: distance of closest approach
+    :return: distance of closest approach
     """
     # squared eccentricities
     e1 = 1 - b1 ** 2 / a1 ** 2
@@ -124,6 +124,17 @@ def calculate_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
 
 
 def compute_ellipse_line_intersection(theta, x_c, y_c, a, b, k, d):
+    """
+    Determine if an ellipse intersects a line
+    :param theta: angle wrt x-axis
+    :param x_c: x-coordinate shift in center of mass
+    :param y_c: y-coordinate shift in center of mass
+    :param a: major axis of ellipse
+    :param b: minor axis of ellipse
+    :param k: slope of line or 'inf' if line is vertical
+    :param d: y-intercept of line or x-intercept if 'inf' flag is specified
+    :return: true/false for intersection
+    """
     # discriminant for determining intersection with arbitrary line: y = kx + d
     if k.isnumeric():
         disc = (d * k * math.cos(theta) ** 2 / b ** 2 + d * k * math.sin(theta) ** 2 / a ** 2 - k * y_c * math.cos(

@@ -28,13 +28,13 @@ def determine_ellipse_overlap(x1, y1, x2, y2, theta1, theta2):
 
     # should get output of 8
     a1, b1, a2, b2, k1d, k2d, k1k2 = (3, 1, 5, 1, 1, -1, 1)
-    d_closest = calculate_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d)
+    d_closest = compute_ellipse_ellipse_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d)
 
     return d_closest
 
 
 # ellipse params: a -- long axis, b -- short axis, theta -- angle with x-axis
-def calculate_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
+def compute_ellipse_ellipse_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
     """
     calculate distance of closest approach between two ellipses along direction of line joining their centers
     :param a1: length of major axis of untransformed ellipse 1
@@ -104,21 +104,21 @@ def calculate_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
             if abs(Q ** 2 / 4 + P ** 3 / 27) < 1e-15:
                 U = 0
             else:
-                U = cube_root(-.5 * Q + (Q ** 2 / 4 + P ** 3 / 27) ** .5)
+                U = np.cbrt(-.5 * Q + (Q ** 2 / 4 + P ** 3 / 27) ** .5)
 
             if abs(U) != 0:
                 y = (-5 / 6) * alpha + U - P / (3 * U)
             else:
                 y = (-5 / 6 * alpha - Q) ** (1 / 3)
 
-            qq = -B / (4 * A) + .5 * ((alpha + 2 * y) ** .5
-                                      + (-(3 * alpha + 2 * y + 2 * beta / (alpha + 2 * y) ** .5)) ** .5)
+            qq = -B / (4 * A) + .5 * (np.sqrt(alpha + 2 * y)
+                                      + np.sqrt(-(3 * alpha + 2 * y + 2 * beta / np.sqrt(alpha + 2 * y))))
 
         # substitute for R'
         dp = np.sqrt((qq ** 2 - 1) / delta * (1 + b2p * (1 + delta) / qq) ** 2
                      + (1 - (qq ** 2 - 1) / delta) * (1 + b2p / qq) ** 2)
 
-    dist = dp * b1 / (1 - e1 * k1d ** 2) ** .5
+    dist = dp * b1 / np.sqrt(1 - e1 * k1d ** 2)
 
     return round(dist, 3)
 
@@ -150,7 +150,7 @@ def compute_ellipse_line_intersection(theta, x_c, y_c, a, b, k, d):
                    theta) ** 2 / a ** 2 - 2 * k * math.cos(
                    theta) * math.sin(theta) / a ** 2 + 2 * k * math.cos(theta) * math.sin(theta) / b ** 2 + math.cos(
                    theta) ** 2 / a ** 2 + math.sin(theta) ** 2 / b ** 2)
-    # degenerate case where line is vertical" x = d
+    # degenerate case where line is vertical x = d
     elif k == "inf":
         disc = (d * math.cos(theta) * math.sin(theta) / a ** 2 - d * math.cos(theta) * math.sin(theta) / b ** 2
                 + y_c * math.cos(theta) / b ** 2 - x_c * math.sin(theta) / a ** 2) ** 2 \
@@ -195,6 +195,8 @@ class TestClosestApproachDistance(unittest.TestCase):
             self.assertEqual(complex(test_input).real, cube_real)
             self.assertEqual(complex(test_input).imag, cube_imag)
 
+    # inputs: a_1, b_1, a_2, b_2, theta_1, theta_2
+    # expected output: distance of closest approach
     def test_closest_approach_distance(self):
         test_cases = [{"inputs": (3, 1, 5, 1, 0, 0), "expected": 8},
                       {"inputs": (5, 1, 2, 0.25, np.pi / 2, np.pi / 2), "expected": 1.25},
@@ -202,8 +204,9 @@ class TestClosestApproachDistance(unittest.TestCase):
         for case in test_cases:
             expected = case["expected"]
             a1, b1, a2, b2, theta1, theta2 = case["inputs"]
-            actual = calculate_closest_approach(a1=a1, b1=b1, a2=a2, b2=b2,
-                                                k1d=np.cos(theta1), k2d=np.cos(theta2), k1k2=np.cos(theta1 - theta2))
+            actual = compute_ellipse_ellipse_closest_approach(a1=a1, b1=b1, a2=a2, b2=b2,
+                                                              k1d=np.cos(theta1), k2d=np.cos(theta2),
+                                                              k1k2=np.cos(theta1 - theta2))
             print(f"Expected: {expected}, Actual: {actual}")
             self.assertEqual(expected, actual)
 

@@ -1,19 +1,47 @@
 import argparse
-import matplotlib.pyplot as plt
 import numpy as np
 import os
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
+
+plt.ioff()
 
 
 class LCDataset:
 
     def plot_snapshot(self, mc_step):
-        # get system state at specified Monte Carlo step
-        system_state = self.system_state_at_step[mc_step]
+        assert (mc_step in self.system_state_at_step.keys()), f"Monte Carlo step {mc_step} is not valid"
+        # create figure and axes
+        fig, ax = plt.subplots()
+        fig.set_size_inches(10, 10)
+
+        # add annular boundaries to plot
+        outer_circle = plt.Circle((0, 0), self.sim_params["R"], color='black', fill=False, linewidth=2.2)
+        inner_circle = plt.Circle((0, 0), self.sim_params["r"], color='black', fill=False, linewidth=2.2)
+        ax.add_patch(inner_circle)
+        ax.add_patch(outer_circle)
+
+        # plot liquid crystal ellipses
         a = self.sim_params['Semi Major Axis']
         b = self.sim_params['Semi Minor Axis']
+        for crystal_pos in self.system_state_at_step[mc_step]:
+            crystal = Ellipse(xy=crystal_pos[:-1], angle=(180 / np.pi) * crystal_pos[-1], width=2 * a, height=2 * b,
+                              linewidth=1.7, color='black', fill=False)
+            ax.add_patch(crystal)
 
-        print(a)
-        print(b)
+        num_ellipses = self.sim_params["# of Ellipse"]
+        outer_radius = self.sim_params["R"]
+        inner_radius = self.sim_params["r"]
+
+        circle_pad = 5
+        ax.set_xlim(-outer_radius - circle_pad, outer_radius + circle_pad)
+        ax.set_ylim(-outer_radius - circle_pad, outer_radius + circle_pad)
+
+        ax.set_title(f'N={num_ellipses} b={b} k={a / b} R={outer_radius} r={inner_radius}', size=20)
+        ax.tick_params(axis='both', labelsize=20)
+
+        return fig
 
     def compute_local_packing_fraction(self, mc_step):
         # get system state at specified Monte Carlo step

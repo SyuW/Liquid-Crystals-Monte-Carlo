@@ -1,6 +1,5 @@
 import numpy as np
 import unittest
-
 import math
 
 
@@ -159,8 +158,6 @@ def compute_ellipse_line_intersection(theta, x_c, y_c, a, b, k, d):
                   + y_c ** 2 / b ** 2 - 1) * (math.cos(theta) ** 2 / b ** 2 + math.sin(theta) ** 2 / a ** 2)
     else:
         raise ValueError("k must be numeric or 'inf'")
-
-    print(disc)
 
     if disc > 0:
         return True

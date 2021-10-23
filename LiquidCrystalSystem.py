@@ -23,10 +23,10 @@ class LCSystem:
         ax.add_patch(outer_circle)
 
         # plot liquid crystal ellipses
-        a = self.sim_params['Semi Major Axis']
-        b = self.sim_params['Semi Minor Axis']
+        b = self.sim_params['Semi Major Axis']
+        a = self.sim_params['Semi Minor Axis']
         for crystal_pos in self.system_state_at_step[mc_step]:
-            crystal = Ellipse(xy=crystal_pos[:-1], angle=(180 / np.pi) * crystal_pos[-1], width=2 * a, height=2 * b,
+            crystal = Ellipse(xy=crystal_pos[:-1], angle=(180 / np.pi) * crystal_pos[-1], width=2 * b, height=2 * a,
                               linewidth=1.7, color='black', fill=False)
             ax.add_patch(crystal)
 
@@ -40,10 +40,13 @@ class LCSystem:
         ax.set_ylim(-outer_radius - circle_pad, outer_radius + circle_pad)
 
         # set title, tweaks to font sizes
-        ax.set_title(f'N={num_ellipses} b={b} k={a / b} R={outer_radius} r={inner_radius}', size=20)
+        ax.set_title(f'N={num_ellipses} b={b} k={b / a} R={outer_radius} r={inner_radius}', size=20)
         ax.tick_params(axis='both', labelsize=20)
 
         return fig
+
+    def plot_and_identify_neighbors(self, mc_step):
+        snapshot_plot = self.plot_snapshot(mc_step)
 
     def plot_all_snapshots(self):
         for step in self.system_state_at_step.keys():
@@ -93,7 +96,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a liquid crystal system dataset")
     parser.add_argument("--data-path", help="path to dataset")
 
-    data_path = "C:\\Users\\Sam Yu\\Desktop\\School\\Fall2021\\Phys_437A_Research_Project\\datasets\\r=14"
+    data_path = "C:\\Users\\Sam Yu\\Desktop\\School\\4A\\Phys_437A_Research_Project\\datasets\\r=14"
 
     args = parser.parse_args()
 
@@ -101,3 +104,6 @@ if __name__ == "__main__":
     for _path_ in os.listdir(args.data_path):
         full_path = os.path.join(args.data_path, _path_, "instanceRun")
         lc = LCSystem(lc_data_path=full_path)
+
+        # only do something for the first dataset
+        break

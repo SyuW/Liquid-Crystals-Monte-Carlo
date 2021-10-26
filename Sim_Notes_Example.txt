@@ -1,0 +1,14 @@
+Parameters
+- - - - -
+Monte Carlo steps: <>
+R: 25
+r: 14
+d_pos / step size: 0.06452336592120286
+d_ang / step size: 0.0716926288013365
+# of Ellipse: 110
+reduced density: 0.3205128205128205
+Semi Minor Axis: 0.25
+Semi Major Axis: 5
+Accepted Moves: 117560890
+Total Moves: 220000000
+Acceptance Rate: 53.43676818181818 %

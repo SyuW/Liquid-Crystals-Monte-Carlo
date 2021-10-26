@@ -14,11 +14,11 @@ import math
 def determine_ellipse_overlap(x1, y1, x2, y2, theta1, theta2):
     # vector joining centers of ellipses
     d_vec = np.array([x1 - x2, y1 - y2], dtype=np.float16)
+    # length between centers of ellipses
+    d = np.linalg.norm(d_vec)
     # normalized major axis vectors
     k1 = np.array([np.cos(theta1), np.sin(theta1)], dtype=np.float16)
     k2 = np.array([np.cos(theta2), np.sin(theta2)], dtype=np.float16)
-    # length between centers of ellipses
-    d = np.linalg.norm(d_vec)
     # calculate cosines
     d_vec_n = d_vec / d
     k1d = k1 @ d_vec_n

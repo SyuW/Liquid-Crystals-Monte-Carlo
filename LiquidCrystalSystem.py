@@ -5,15 +5,16 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
-plt.ioff()
-
 
 class LCSystem:
 
     def plot_snapshot(self, mc_step):
         assert (mc_step in self.system_state_at_step.keys()), f"Monte Carlo step {mc_step} is not valid"
+
         # create figure and axes
-        fig, ax = plt.subplots()
+        with plt.ioff():
+            fig, ax = plt.subplots()
+
         fig.set_size_inches(10, 10)
 
         # add annular boundaries to plot
@@ -25,10 +26,11 @@ class LCSystem:
         # plot liquid crystal ellipses
         b = self.sim_params['Semi Major Axis']
         a = self.sim_params['Semi Minor Axis']
-        for crystal_pos in self.system_state_at_step[mc_step]:
-            crystal = Ellipse(xy=crystal_pos[:-1], angle=(180 / np.pi) * crystal_pos[-1], width=2 * b, height=2 * a,
-                              linewidth=1.7, color='black', fill=False)
-            ax.add_patch(crystal)
+        for particle_pos in self.system_state_at_step[mc_step]:
+            particle = Ellipse(xy=particle_pos[:-1], angle=(180 / np.pi) * (particle_pos[-1] % np.pi),
+                               width=2 * b, height=2 * a,
+                               linewidth=1.7, color='black', fill=False)
+            ax.add_patch(particle)
 
         num_ellipses = self.sim_params["# of Ellipse"]
         outer_radius = self.sim_params["R"]
@@ -45,27 +47,38 @@ class LCSystem:
 
         return fig
 
-    def plot_and_identify_neighbors(self, mc_step):
-        snapshot_plot = self.plot_snapshot(mc_step)
+    def plot_batch_snapshots(self, save_dir, limit=50):
 
-    def plot_all_snapshots(self):
-        for step in self.system_state_at_step.keys():
-            save_path = "snapshots/" + "" + f"{step}"
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        count = 0
+        for step in sorted(self.system_state_at_step.keys()):
+            save_path = os.path.join(save_dir, f"system_snapshot_at_step_{step}.png")
             snapshot_plot = self.plot_snapshot(step)
             snapshot_plot.savefig(save_path)
-        return
+
+            count += 1
+            if count > 50:
+                break
 
     def __init__(self, lc_data_path):
         # get parameters from simulation
         self.sim_params = dict()
-        with open(os.path.join(lc_data_path, "MonteCarlo_Annulus_SimNotes.txt")) as file:
-            for line in file.readlines()[2:]:
-                info = line.strip().split(": ")
-                # special case of acceptance rate
-                if info[0] == "Acceptance Rate":
-                    self.sim_params[info[0]] = float(info[1].strip(" %")) / 100
-                else:
-                    self.sim_params[info[0]] = float(info[1])
+
+        # load information from the simulation notes file if it exists
+        if os.path.exists(os.path.join(lc_data_path, "MonteCarlo_Annulus_SimNotes.txt")):
+            with open(os.path.join(lc_data_path, "MonteCarlo_Annulus_SimNotes.txt")) as file:
+                for line in file.readlines()[2:]:
+                    info = line.strip().split(": ")
+                    # special case of acceptance rate
+                    if info[0] == "Acceptance Rate":
+                        self.sim_params[info[0]] = float(info[1].strip(" %")) / 100
+                    else:
+                        self.sim_params[info[0]] = float(info[1])
+        # if it does not exist then move on
+        else:
+            pass
 
         # get paths of all data files and retrieve system state information for each Monte Carlo step
         state_file_paths = [os.path.join(lc_data_path, p) for p in os.listdir(lc_data_path) if p.endswith(".csv")]
@@ -101,9 +114,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # plot all snapshots for all system sizes in dataset
+    _path_ = os.listdir(args.data_path)[0]
+    full_path = os.path.join(args.data_path, _path_, "instanceRun")
+    lc = LCSystem(lc_data_path=full_path)
+    '''
     for _path_ in os.listdir(args.data_path):
         full_path = os.path.join(args.data_path, _path_, "instanceRun")
         lc = LCSystem(lc_data_path=full_path)
 
         # only do something for the first dataset
         break
+    '''
+    pass

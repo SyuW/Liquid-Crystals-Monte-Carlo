@@ -6,9 +6,39 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
 
+def get_configuration_information(path):
+    """
+    Get information from the simulation
+    :param path:
+    :return:
+    """
+    params = dict()
+    # load information from the simulation notes file if it exists
+    if os.path.exists(os.path.join(path, "MonteCarlo_Annulus_SimNotes.txt")):
+        with open(os.path.join(path, "MonteCarlo_Annulus_SimNotes.txt")) as file:
+            for line in file.readlines()[2:]:
+                info = line.strip().split(": ")
+                # special case of acceptance rate
+                if info[0] == "Acceptance Rate":
+                    params[info[0]] = float(info[1].strip(" %")) / 100
+                else:
+                    params[info[0]] = float(info[1])
+    # if it does not exist then move on
+    else:
+        pass
+
+    return params
+
+
 class LCSystem:
 
-    def plot_snapshot(self, mc_step):
+    def plot_snapshot(self, mc_step, extra_particles=[]):
+        """
+        Plot a snapshot of the system at a specific Monte Carlo step
+        :param mc_step: Monte Carlo step
+        :param extra_particles: extra particles to render
+        :return: fig: figure of plot
+        """
         assert (mc_step in self.system_state_at_step.keys()), f"Monte Carlo step {mc_step} is not valid"
 
         # create figure and axes
@@ -32,6 +62,16 @@ class LCSystem:
                                linewidth=1.7, color='black', fill=False)
             ax.add_patch(particle)
 
+        for particle_pos in extra_particles:
+            if extra_particles.index(particle_pos) == 0:
+                color = 'red'
+            else:
+                color = 'green'
+            particle = Ellipse(xy=particle_pos[:-1], angle=(180 / np.pi) * (particle_pos[-1] % np.pi),
+                               width=2 * b, height=2 * a,
+                               linewidth=1.7, facecolor=color)
+            ax.add_patch(particle)
+
         num_ellipses = self.sim_params["# of Ellipse"]
         outer_radius = self.sim_params["R"]
         inner_radius = self.sim_params["r"]
@@ -48,7 +88,12 @@ class LCSystem:
         return fig
 
     def plot_batch_snapshots(self, save_dir, limit=50):
-
+        """
+        Plot a batch of snapshots at once
+        :param save_dir: directory to save at
+        :param limit: snapshot limit
+        :return:
+        """
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
@@ -59,26 +104,12 @@ class LCSystem:
             snapshot_plot.savefig(save_path)
 
             count += 1
-            if count > 50:
+            if count > limit:
                 break
 
     def __init__(self, lc_data_path):
         # get parameters from simulation
-        self.sim_params = dict()
-
-        # load information from the simulation notes file if it exists
-        if os.path.exists(os.path.join(lc_data_path, "MonteCarlo_Annulus_SimNotes.txt")):
-            with open(os.path.join(lc_data_path, "MonteCarlo_Annulus_SimNotes.txt")) as file:
-                for line in file.readlines()[2:]:
-                    info = line.strip().split(": ")
-                    # special case of acceptance rate
-                    if info[0] == "Acceptance Rate":
-                        self.sim_params[info[0]] = float(info[1].strip(" %")) / 100
-                    else:
-                        self.sim_params[info[0]] = float(info[1])
-        # if it does not exist then move on
-        else:
-            pass
+        self.sim_params = get_configuration_information(lc_data_path)
 
         # get paths of all data files and retrieve system state information for each Monte Carlo step
         state_file_paths = [os.path.join(lc_data_path, p) for p in os.listdir(lc_data_path) if p.endswith(".csv")]

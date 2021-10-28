@@ -9,11 +9,11 @@ from sklearn.decomposition import PCA
 
 # custom imports
 from LiquidCrystalSystem import LCSystem
+from utilities import get_feature_func
 
 
 def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
-                                         feature_func=(lambda x, y: abs(np.cos(x - y)))):
-
+                                         feature_func=(lambda c1, c2: abs(np.cos(c1[-1] - c2[-1])))):
     assert (num_features < len(coordinates)), \
         f"Number of features {num_features} cannot be greater than number of particles {len(coordinates)}"
 
@@ -21,8 +21,8 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
     feature_vectors = []
 
     # set the sampling rate for nearest neighbors
-    if num_samples % num_features == 0:
-        nn_sampling_rate = math.floor(N / num_features) - 1
+    if N % num_features == 0:
+        nn_sampling_rate = N / num_features - 1
     else:
         nn_sampling_rate = math.floor(N / num_features)
 
@@ -36,65 +36,80 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
         chosen_coord = coordinates[probe_index]
 
         # special functions for nearest neighbor sort and feature calculation
-        norm_squared = lambda x, y: (arr(x) - arr(y)) @ (arr(x) - arr(y))
-        distance_to_probe = lambda x: norm_squared(x[:2], chosen_coord[:2])
+        dist_squared = lambda x, y: (arr(x) - arr(y)) @ (arr(x) - arr(y))
+        dist_squared_to_probe = lambda x: dist_squared(x[:2], chosen_coord[:2])
 
         # sort based on nearest distance to probe
-        nn_sorted = sorted(coordinates, key=distance_to_probe)
+        nn_sorted = sorted(coordinates, key=dist_squared_to_probe)
 
         fv = []
+        feature_particle_coordinates = [chosen_coord]
         # add feature based on nearest neighbor distance
         for i, c in enumerate(nn_sorted):
+
             if (i > 0) and (i % nn_sampling_rate) == 0:
-                feature = feature_func(c[-1], chosen_coord[-1])
+                feature = feature_func(c, chosen_coord)
+                feature_particle_coordinates.append(c)
                 fv.append(feature)
 
+            # stop adding features if total number is met
             if len(fv) == num_features:
                 break
 
         feature_vectors.append(fv)
 
-    # concatenate into a matrix
-    feature_vectors = np.stack(feature_vectors, axis=0)
-
-    return feature_vectors
+    return feature_vectors, feature_particle_coordinates
 
 
-def create_data_matrix(lc_systems_to_density):
-
-    number_of_features = 10
-    datapoints_per_step = 5
+def create_data_matrix(systems_at_density):
+    n_features = 10
+    pts_per_snap = 5
 
     # number of rows AKA number of data-points
     # = number of densities * number of captures per density >= 1e6 * number of data-points per capture
-    number_of_densities = len(lc_systems_to_density)
-    number_of_captures = len([step for step in
-                              lc_systems_to_density[0.2913752913752914].system_state_at_step
-                              if step >= 1e6])
+    n_densities = len(systems_at_density)
+    n_snaps = len([step for step in
+                   systems_at_density[0.2913752913752914].system_state_at_step
+                   if step >= 1e6])
 
-    print(f"Number of columns: {number_of_densities * number_of_captures * datapoints_per_step}")
-    print(f"Number of features: {number_of_features}")
+    print(f"Number of columns: {n_densities * n_snaps * pts_per_snap}")
+    print(f"Number of features: {n_features}")
+
+    # function for computing features
+    feature_func = get_feature_func('orientation')
 
     data_matrix = []
 
     # iterate over densities
-    for density in lc_systems_to_density.keys():
+    for density in systems_at_density.keys():
 
-        system_state_over_steps = lc_systems_to_density[density].system_state_at_step
+        snapshot_at_step = systems_at_density[density].system_state_at_step
 
         # iterate over Monte Carlo steps
-        for mc_step in system_state_over_steps:
+        for mc_step in snapshot_at_step:
 
+            # choose step where system has equilibrated
             if mc_step >= 1e6:
-                snapshot = system_state_over_steps[mc_step]
-
-                feature_vecs = create_feature_vectors_from_snapshot(snapshot, number_of_features, datapoints_per_step)
-
-                data_matrix.append(feature_vecs)
+                snapshot = snapshot_at_step[mc_step]
+                feature_vecs, _ = create_feature_vectors_from_snapshot(snapshot, n_features,
+                                                                       pts_per_snap, feature_func)
+                data_matrix = data_matrix + feature_vecs
 
     data_matrix = np.stack(data_matrix, axis=0)
 
     return data_matrix
+
+
+def run_pca(X):
+    """
+    run principal component analysis
+    :param X: data matrix
+    :return:
+    """
+    pca = PCA()
+    pca.fit(X)
+
+    return pca.components_, pca.explained_variance_ratio_
 
 
 if __name__ == "__main__":
@@ -113,7 +128,7 @@ if __name__ == "__main__":
         else:
             continue
 
-        lc_systems_to_density[global_packing_fraction] = lc.system_state_at_step
+        lc_systems_to_density[global_packing_fraction] = lc
 
     data = create_data_matrix(lc_systems_to_density)
     print(data.shape)

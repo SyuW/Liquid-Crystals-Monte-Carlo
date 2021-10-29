@@ -9,11 +9,13 @@ from sklearn.decomposition import PCA
 
 # custom imports
 from LiquidCrystalSystem import LCSystem
-from utilities import get_feature_func
+from utilities import get_feature_func, get_nearest_neighbor_func
 
 
 def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
-                                         feature_func=(lambda c1, c2: abs(np.cos(c1[-1] - c2[-1])))):
+                                         feature_func=get_feature_func('relative_orientation'),
+                                         nn_func=get_nearest_neighbor_func('euclidean_distance')):
+
     assert (num_features < len(coordinates)), \
         f"Number of features {num_features} cannot be greater than number of particles {len(coordinates)}"
 
@@ -40,7 +42,7 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
         dist_squared_to_probe = lambda x: dist_squared(x[:2], chosen_coord[:2])
 
         # sort based on nearest distance to probe
-        nn_sorted = sorted(coordinates, key=dist_squared_to_probe)
+        nn_sorted = sorted(coordinates, key=nn_func)
 
         fv = []
         feature_particle_coordinates = [chosen_coord]

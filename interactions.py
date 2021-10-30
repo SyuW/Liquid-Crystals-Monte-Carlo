@@ -36,6 +36,7 @@ def determine_ellipse_overlap(x1, y1, x2, y2, theta1, theta2):
 def compute_ellipse_ellipse_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
     """
     calculate distance of closest approach between two ellipses along direction of line joining their centers
+
     :param a1: length of major axis of untransformed ellipse 1
     :param b1: length of minor axis of untransformed ellipse 1
     :param a2: length of major axis of untransformed ellipse 2
@@ -125,6 +126,7 @@ def compute_ellipse_ellipse_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
 def compute_ellipse_line_intersection(theta, x_c, y_c, a, b, k, d):
     """
     Determine if an ellipse intersects a line
+
     :param theta: angle wrt x-axis
     :param x_c: x-coordinate shift in center of mass
     :param y_c: y-coordinate shift in center of mass

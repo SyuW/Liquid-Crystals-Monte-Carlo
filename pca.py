@@ -37,10 +37,6 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
         # list of distances relative to probe particle
         chosen_coord = coordinates[probe_index]
 
-        # special functions for nearest neighbor sort and feature calculation
-        dist_squared = lambda x, y: (arr(x) - arr(y)) @ (arr(x) - arr(y))
-        dist_squared_to_probe = lambda x: dist_squared(x[:2], chosen_coord[:2])
-
         # sort based on nearest distance to probe
         nn_sorted = sorted(coordinates, key=nn_func)
 
@@ -63,18 +59,18 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
     return feature_vectors, feature_particle_coordinates
 
 
-def create_data_matrix(systems_at_density):
+def create_data_matrix(systems):
     n_features = 10
     pts_per_snap = 5
 
     # number of rows AKA number of data-points
     # = number of densities * number of captures per density >= 1e6 * number of data-points per capture
-    n_densities = len(systems_at_density)
+    n_densities = len(systems)
     n_snaps = len([step for step in
-                   systems_at_density[0.2913752913752914].system_state_at_step
+                   systems[0.2913752913752914].snapshots
                    if step >= 1e6])
 
-    print(f"Number of columns: {n_densities * n_snaps * pts_per_snap}")
+    print(f"Number of datapoints: {n_densities * n_snaps * pts_per_snap}")
     print(f"Number of features: {n_features}")
 
     # function for computing features
@@ -83,9 +79,9 @@ def create_data_matrix(systems_at_density):
     data_matrix = []
 
     # iterate over densities
-    for density in systems_at_density.keys():
+    for density in systems.keys():
 
-        snapshot_at_step = systems_at_density[density].system_state_at_step
+        snapshot_at_step = systems[density].snapshots
 
         # iterate over Monte Carlo steps
         for mc_step in snapshot_at_step:
@@ -102,14 +98,13 @@ def create_data_matrix(systems_at_density):
     return data_matrix
 
 
-def run_pca(X):
+def run_pca(pca_data):
     """
     run principal component analysis
-    :param X: data matrix
     :return:
     """
     pca = PCA()
-    pca.fit(X)
+    pca.fit(pca_data)
 
     return pca.components_, pca.explained_variance_ratio_
 

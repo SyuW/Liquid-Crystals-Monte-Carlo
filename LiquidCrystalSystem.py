@@ -6,16 +6,19 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
 
-def get_configuration_information(path):
+def get_configuration_information(path, confinement="Annulus"):
     """
     Get information from the simulation
+    :param confinement:
     :param path:
     :return:
     """
     params = dict()
+    params["Confinement Type"] = confinement
+    sim_notes_file = f"MonteCarlo_{confinement}_SimNotes.txt"
     # load information from the simulation notes file if it exists
-    if os.path.exists(os.path.join(path, "MonteCarlo_Annulus_SimNotes.txt")):
-        with open(os.path.join(path, "MonteCarlo_Annulus_SimNotes.txt")) as file:
+    if os.path.exists(os.path.join(path, sim_notes_file)):
+        with open(os.path.join(path, sim_notes_file)) as file:
             for line in file.readlines()[2:]:
                 info = line.strip().split(": ")
                 # special case of acceptance rate
@@ -25,6 +28,7 @@ def get_configuration_information(path):
                     params[info[0]] = float(info[1])
     # if it does not exist then move on
     else:
+        print(f"{sim_notes_file} does not exist at {path}!")
         pass
 
     return params
@@ -110,9 +114,12 @@ class LCSystem:
             if count > limit:
                 break
 
-    def __init__(self, lc_data_path):
+    def __init__(self, lc_data_path, confinement="Annulus"):
         # get parameters from simulation
-        self.sim_params = get_configuration_information(lc_data_path)
+        self.sim_params = get_configuration_information(lc_data_path, confinement=confinement)
+
+        if confinement == "Circle":
+            self.sim_params["r"] = 0
 
         # get paths of all data files and retrieve system state information for each Monte Carlo step
         pos_array_paths = [os.path.join(lc_data_path, p) for p in os.listdir(lc_data_path) if p.endswith(".csv")]
@@ -133,6 +140,9 @@ class LCSystem:
                 MC_step_no = int(basename.strip("PosArray").strip(".csv"))
 
             self.snapshots[MC_step_no] = np.loadtxt(p, delimiter=",", dtype=np.float32)
+
+            # modulo pi reduction to angles
+            self.snapshots[MC_step_no][:, 2] = self.snapshots[MC_step_no][:, 2] % np.pi
 
             # add number of particles to dictionary if doesn't already exist
             if "# of Ellipse" not in self.sim_params.keys():

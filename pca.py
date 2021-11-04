@@ -3,7 +3,6 @@ import math
 import os
 
 import numpy as np
-from numpy import array as arr
 
 from sklearn.decomposition import PCA
 
@@ -47,19 +46,19 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
     # select random probe particle for nearest neighbor distance
     for probe_index in probe_indices:
         # list of distances relative to probe particle
-        chosen_coord = coordinates[probe_index]
+        probe_coord = coordinates[probe_index]
 
         # sort based on nearest distance to probe
         nn_sorted = sorted(coordinates, key=nn_func)
 
         fv = []
-        feature_particle_coordinates = [chosen_coord]
+        feature_particle_coords = [probe_coord]
         # add feature based on nearest neighbor distance
         for i, c in enumerate(nn_sorted):
 
             if (i > 0) and (i % nn_sampling_rate) == 0:
-                feature = feature_func(c, chosen_coord)
-                feature_particle_coordinates.append(c)
+                feature = feature_func(c, probe_coord)
+                feature_particle_coords.append(c)
                 fv.append(feature)
 
             # stop adding features if total number is met
@@ -68,7 +67,7 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
 
         feature_vectors.append(fv)
 
-    return feature_vectors, feature_particle_coordinates
+    return feature_vectors, feature_particle_coords
 
 
 def create_data_matrix(systems):

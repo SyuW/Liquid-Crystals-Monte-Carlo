@@ -65,11 +65,11 @@ class LCSystem:
             ax.add_patch(particle)
 
         # add the extra ellipses
-        for particle_pos in extra_particles:
-            if extra_particles.index(particle_pos) == 0:
+        for i, particle_pos in enumerate(extra_particles):
+            if i == 0:
                 color = 'red'
             else:
-                color = 'green'
+                color = 'cyan'
             particle = Ellipse(xy=particle_pos[:-1], angle=(180 / np.pi) * (particle_pos[-1] % np.pi),
                                width=2 * b, height=2 * a,
                                linewidth=1.7, facecolor=color)
@@ -133,6 +133,10 @@ class LCSystem:
                 MC_step_no = int(basename.strip("PosArray").strip(".csv"))
 
             self.snapshots[MC_step_no] = np.loadtxt(p, delimiter=",", dtype=np.float32)
+
+            # add number of particles to dictionary if doesn't already exist
+            if "# of Ellipse" not in self.sim_params.keys():
+                self.sim_params["# of Ellipse"] = len(self.snapshots[MC_step_no])
 
 
 if __name__ == "__main__":

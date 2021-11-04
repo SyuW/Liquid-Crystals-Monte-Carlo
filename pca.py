@@ -15,7 +15,19 @@ from utilities import get_feature_func, get_nearest_neighbor_func
 def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
                                          feature_func=get_feature_func('relative_orientation'),
                                          nn_func=get_nearest_neighbor_func('euclidean_distance')):
+    """
+    Create the feature vectors from provided coordinates for all particles
 
+    :param coordinates: list of (x, y, theta) coordinates
+    :param num_features: number of features in each vector
+    :param num_samples: total number of vectors to create
+    :param feature_func: function for calculating features from coordinates
+    :param nn_func: function for determining nearest neighbors
+
+    :return: feature_vectors: list of feature vectors
+    :return: feature_particle_coordinates: list of coordinates for
+    particles used for calculating features, including the probe particle
+    """
     assert (num_features < len(coordinates)), \
         f"Number of features {num_features} cannot be greater than number of particles {len(coordinates)}"
 

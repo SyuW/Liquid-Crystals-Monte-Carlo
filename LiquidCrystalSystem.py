@@ -2,13 +2,16 @@ import argparse
 import numpy as np
 import os
 
+from matplotlib.cm import get_cmap
+from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
 
-def get_configuration_information(path, confinement="Annulus"):
+def get_configuration_information(path, confinement="Annulus", verbose=False):
     """
     Get information from the simulation
+    :param verbose:
     :param confinement:
     :param path:
     :return:
@@ -28,15 +31,16 @@ def get_configuration_information(path, confinement="Annulus"):
                     params[info[0]] = float(info[1])
     # if it does not exist then move on
     else:
-        print(f"{sim_notes_file} does not exist at {path}!")
-        pass
+        if verbose:
+            print(f"Warning: {sim_notes_file} does not exist at {path}\n")
+            pass
 
     return params
 
 
 class LCSystem:
 
-    def plot_snapshot(self, mc_step, extra_particles=[]):
+    def plot_snapshot(self, mc_step, extra_particles=[], color_angles=False):
         """
         Plot a snapshot of the system at a specific Monte Carlo step
         :param mc_step: Monte Carlo step
@@ -49,7 +53,10 @@ class LCSystem:
         with plt.ioff():
             fig, ax = plt.subplots()
 
-        fig.set_size_inches(10, 10)
+        if color_angles:
+            fig.set_size_inches(10, 12)
+        else:
+            fig.set_size_inches(10, 10)
 
         # add annular boundaries to plot
         outer_circle = plt.Circle((0, 0), self.sim_params["R"], color='black', fill=False, linewidth=2.2)
@@ -61,12 +68,33 @@ class LCSystem:
         b = self.sim_params['Semi Major Axis']
         a = self.sim_params['Semi Minor Axis']
 
+        # color map
+        color_map = get_cmap("twilight")
+
         # add ellipses
+        p = []
+        colors = []
         for particle_pos in self.snapshots[mc_step]:
-            particle = Ellipse(xy=particle_pos[:-1], angle=(180 / np.pi) * (particle_pos[-1] % np.pi),
-                               width=2 * b, height=2 * a,
-                               linewidth=1.7, color='black', fill=False)
+            ellipse_angle = (180 / np.pi) * (particle_pos[-1] % np.pi)
+            if color_angles:
+                fill_color = color_map(ellipse_angle / 180)
+                particle = Ellipse(xy=particle_pos[:-1], angle=ellipse_angle,
+                                   width=2 * b, height=2 * a, ec="black",
+                                   linewidth=1.7, fc=fill_color, fill=True)
+                p.append(particle)
+                colors.append(fill_color)
+            else:
+                particle = Ellipse(xy=particle_pos[:-1], angle=ellipse_angle,
+                                   width=2 * b, height=2 * a,
+                                   linewidth=1.7, color='black', fill=False)
             ax.add_patch(particle)
+
+        if color_angles:
+            e = PatchCollection(p, cmap=color_map)
+            e.set_array(colors)
+            cbar = fig.colorbar(e, ticks=[0, 0.5, 1], label="Angle wrt x-axis",
+                                orientation="horizontal", pad=0.05)
+            cbar.ax.set_xticklabels(["0", r"$\pi/2$", r"$\pi$"])
 
         # add the extra ellipses
         for i, particle_pos in enumerate(extra_particles):
@@ -78,6 +106,7 @@ class LCSystem:
                                width=2 * b, height=2 * a,
                                linewidth=1.7, facecolor=color)
             ax.add_patch(particle)
+            ax.annotate(f"{i}", particle_pos[:2], color='g', weight='bold', fontsize=12, ha='center', va='center')
 
         num_ellipses = self.sim_params["# of Ellipse"]
         outer_radius = self.sim_params["R"]
@@ -141,9 +170,6 @@ class LCSystem:
 
             self.snapshots[MC_step_no] = np.loadtxt(p, delimiter=",", dtype=np.float32)
 
-            # modulo pi reduction to angles
-            self.snapshots[MC_step_no][:, 2] = self.snapshots[MC_step_no][:, 2] % np.pi
-
             # add number of particles to dictionary if doesn't already exist
             if "# of Ellipse" not in self.sim_params.keys():
                 self.sim_params["# of Ellipse"] = len(self.snapshots[MC_step_no])
@@ -158,7 +184,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # plot all snapshots for all system sizes in dataset
-    _path_ = os.listdir(args.data_path)[0]
+    _path_ = os.listdir(args.data_path)[-1]
     full_path = os.path.join(args.data_path, _path_, "instanceRun")
     lc = LCSystem(lc_data_path=full_path)
     '''

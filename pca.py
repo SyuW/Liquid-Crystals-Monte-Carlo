@@ -23,9 +23,7 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
     :param feature_func: function for calculating features from coordinates
     :param nn_func: function for determining nearest neighbors
 
-    :return: feature_vectors: list of feature vectors
-    :return: feature_particle_coordinates: list of coordinates for
-    particles used for calculating features, including the probe particle
+    :return: feature_vectors, feature_particle_coordinates
     """
     assert (num_features < len(coordinates)), \
         f"Number of features {num_features} cannot be greater than number of particles {len(coordinates)}"

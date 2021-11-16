@@ -92,9 +92,7 @@ class LCSystem:
         if color_angles:
             e = PatchCollection(p, cmap=color_map)
             e.set_array(colors)
-            cbar = fig.colorbar(e, ticks=[0, 0.5, 1], label="Angle wrt x-axis",
-                                orientation="horizontal", pad=0.05)
-            cbar.ax.set_xticklabels(["0", r"$\pi/2$", r"$\pi$"])
+            cbar = fig.colorbar(e, label="Angle wrt x-axis", orientation="horizontal", pad=0.05)
 
         # add the extra ellipses
         for i, particle_pos in enumerate(extra_particles):

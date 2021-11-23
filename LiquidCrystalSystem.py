@@ -43,6 +43,7 @@ class LCSystem:
     def plot_snapshot(self, mc_step, extra_particles=[], color_angles=False):
         """
         Plot a snapshot of the system at a specific Monte Carlo step
+        :param color_angles:
         :param mc_step: Monte Carlo step
         :param extra_particles: extra particles to render
         :return: fig: figure of plot
@@ -116,7 +117,7 @@ class LCSystem:
         ax.set_ylim(-outer_radius - circle_pad, outer_radius + circle_pad)
 
         # set title, tweaks to font sizes
-        ax.set_title(f'N={num_ellipses} b={b} k={b / a} R={outer_radius} r={inner_radius}', size=20)
+        ax.set_title(f'N={num_ellipses} b={b} k={b / a} R={outer_radius} r={inner_radius} step={mc_step}', size=20)
         ax.tick_params(axis='both', labelsize=20)
 
         return fig
@@ -185,12 +186,3 @@ if __name__ == "__main__":
     _path_ = os.listdir(args.data_path)[-1]
     full_path = os.path.join(args.data_path, _path_, "instanceRun")
     lc = LCSystem(lc_data_path=full_path)
-    '''
-    for _path_ in os.listdir(args.data_path):
-        full_path = os.path.join(args.data_path, _path_, "instanceRun")
-        lc = LCSystem(lc_data_path=full_path)
-
-        # only do something for the first dataset
-        break
-    '''
-    pass

@@ -1,121 +1,82 @@
 import argparse
-import math
 import os
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from sklearn.decomposition import PCA
 
 # custom imports
 from LiquidCrystalSystem import LCSystem
-from utilities import get_feature_func, get_nearest_neighbor_func
+from features import create_data_matrix
 
 
-def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
-                                         feature_func=get_feature_func('relative_orientation'),
-                                         nn_func=get_nearest_neighbor_func('euclidean_distance')):
+def run_pca(pca_data, save_path, create_plots=True, save_arrays=True, verbose=False):
     """
-    Create the feature vectors from provided coordinates for all particles
 
-    :param coordinates: list of (x, y, theta) coordinates
-    :param num_features: number of features in each vector
-    :param num_samples: total number of vectors to create
-    :param feature_func: function for calculating features from coordinates
-    :param nn_func: function for determining nearest neighbors
-
-    :return: feature_vectors, feature_particle_coordinates
-    """
-    assert (num_features < len(coordinates)), \
-        f"Number of features {num_features} cannot be greater than number of particles {len(coordinates)}"
-
-    N = len(coordinates)
-    feature_vectors = []
-
-    # set the sampling rate for nearest neighbors
-    if N % num_features == 0:
-        nn_sampling_rate = N / num_features - 1
-    else:
-        nn_sampling_rate = math.floor(N / num_features)
-
-    # set a random seed for reproducibility
-    rng = np.random.default_rng(666)
-    probe_indices = rng.choice(N, size=num_samples, replace=False)
-
-    # select random probe particle for nearest neighbor distance
-    for probe_index in probe_indices:
-        # list of distances relative to probe particle
-        probe_coord = coordinates[probe_index]
-
-        # sort based on nearest distance to probe
-        nn_sorted = sorted(coordinates, key=nn_func)
-
-        fv = []
-        feature_particle_coords = [probe_coord]
-        # add feature based on nearest neighbor distance
-        for i, c in enumerate(nn_sorted):
-
-            if (i > 0) and (i % nn_sampling_rate) == 0:
-                feature = feature_func(c, probe_coord)
-                feature_particle_coords.append(c)
-                fv.append(feature)
-
-            # stop adding features if total number is met
-            if len(fv) == num_features:
-                break
-
-        feature_vectors.append(fv)
-
-    return feature_vectors, feature_particle_coords
-
-
-def create_data_matrix(systems):
-    n_features = 10
-    pts_per_snap = 5
-
-    # number of rows AKA number of data-points
-    # = number of densities * number of captures per density >= 1e6 * number of data-points per capture
-    n_densities = len(systems)
-    n_snaps = len([step for step in
-                   systems[0.2913752913752914].snapshots
-                   if step >= 1e6])
-
-    print(f"Number of datapoints: {n_densities * n_snaps * pts_per_snap}")
-    print(f"Number of features: {n_features}")
-
-    # function for computing features
-    feature_func = get_feature_func('orientation')
-
-    data_matrix = []
-
-    # iterate over densities
-    for density in systems.keys():
-
-        snapshot_at_step = systems[density].snapshots
-
-        # iterate over Monte Carlo steps
-        for mc_step in snapshot_at_step:
-
-            # choose step where system has equilibrated
-            if mc_step >= 1e6:
-                snapshot = snapshot_at_step[mc_step]
-                feature_vecs, _ = create_feature_vectors_from_snapshot(snapshot, n_features,
-                                                                       pts_per_snap, feature_func)
-                data_matrix = data_matrix + feature_vecs
-
-    data_matrix = np.stack(data_matrix, axis=0)
-
-    return data_matrix
-
-
-def run_pca(pca_data):
-    """
-    run principal component analysis
+    :param save_arrays:
+    :param create_plots:
+    :param pca_data:
+    :param save_path:
+    :param verbose:
     :return:
     """
+
     pca = PCA()
     pca.fit(pca_data)
 
+    if verbose:
+        print(f"First principal component: {pca.components_[0]}")
+        print(f"Explained variance ratios: {pca.explained_variance_ratio_}")
+
+    if save_arrays:
+        np.save(pca.components_[0])
+        np.save(pca.explained_variance_ratio_[0])
+
+    num_of_features = pca_data.shape[1]
+    if create_plots:
+        with plt.ioff():
+            fig, ax = plt.subplots()
+        # explained variances
+        ax.plot(range(1, num_of_features + 1), pca.explained_variance_ratio_)
+        ax.scatter(range(1, num_of_features + 1), pca.explained_variance_ratio_, marker="v")
+        ax.grid()
+        ax.set_xlabel("number of components")
+        ax.set_ylabel("Explained variance")
+        ax.set_title("Explained variance ratios from PCA")
+        fig.savefig(os.path.join(save_path, "explained_variances.png"))
+        ax.cla()
+        # Cumulative explained variance ratios
+        ax.plot(range(1, num_of_features + 1), np.cumsum(pca.explained_variance_ratio_))
+        ax.scatter(range(1, num_of_features + 1), np.cumsum(pca.explained_variance_ratio_), marker="v")
+        ax.grid()
+        ax.set_xlabel("number of components")
+        ax.set_ylabel("cumulative explained variance")
+        ax.set_title("Cumulative explained variance ratios from PCA")
+        fig.savefig(os.path.join(save_path, "cumulative_explained_variances.png"))
+        ax.cla()
+        # weights of first principal component
+        w1 = pca.components_[0]
+        w1 = np.abs(w1)
+        ax.plot(range(1, num_of_features + 1), w1)
+        ax.scatter(range(1, num_of_features + 1), w1, marker="s")
+        ax.grid()
+        ax.set_xlabel("k")
+        ax.set_ylabel(r"$[\mathbf{w}_1]^k$")
+        ax.set_title(r"Components of $w_1$")
+        fig.savefig(os.path.join(save_path, "1st_pc_weights.png"))
+        ax.cla()
+        fig.close()
+
     return pca.components_, pca.explained_variance_ratio_
+
+
+def visualize_feature_selection(systems):
+    return
+
+
+def plot_all_snapshots(systems):
+    return
 
 
 if __name__ == "__main__":

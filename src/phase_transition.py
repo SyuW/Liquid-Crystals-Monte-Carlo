@@ -15,6 +15,5 @@ def find_critical_density(w1, samples, ):
     return
 
 
-
 if __name__ == "__main__":
     pass

@@ -4,23 +4,24 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+from datetime import date
 from sklearn.decomposition import PCA
 
-# custom imports
-from LiquidCrystalSystem import LCSystem
-from features import create_data_matrix
 
-
-def run_pca(pca_data, save_path, create_plots=True, save_arrays=True, verbose=False):
+def run_pca(pca_data, base_save_path, create_plots=True,
+            load_path=None, save_path=None, verbose=False):
     """
 
-    :param save_arrays:
+    :param save_path:
+    :param load_path:
+    :param base_save_path:
     :param create_plots:
     :param pca_data:
-    :param save_path:
     :param verbose:
     :return:
     """
+    # create the save path for plots
+    save_path = os.path.join(base_save_path, date.today())
 
     pca = PCA()
     pca.fit(pca_data)
@@ -28,10 +29,6 @@ def run_pca(pca_data, save_path, create_plots=True, save_arrays=True, verbose=Fa
     if verbose:
         print(f"First principal component: {pca.components_[0]}")
         print(f"Explained variance ratios: {pca.explained_variance_ratio_}")
-
-    if save_arrays:
-        np.save(pca.components_[0])
-        np.save(pca.explained_variance_ratio_[0])
 
     num_of_features = pca_data.shape[1]
     if create_plots:
@@ -80,22 +77,10 @@ def plot_all_snapshots(systems):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="apply principal component analysis")
-    parser.add_argument("--data-path", help="path to dataset")
+    from features import load_dataset, create_data_matrix
 
-    args = parser.parse_args()
-
-    lc_systems_to_density = dict()
-    for _path_ in os.listdir(args.data_path):
-        full_path = os.path.join(args.data_path, _path_, "instanceRun")
-
-        if os.path.exists(os.path.join(full_path, "MonteCarlo_Annulus_SimNotes.txt")):
-            lc = LCSystem(lc_data_path=full_path)
-            global_packing_fraction = lc.sim_params['reduced density']
-        else:
-            continue
-
-        lc_systems_to_density[global_packing_fraction] = lc
-
-    data = create_data_matrix(lc_systems_to_density)
-    print(data.shape)
+    project_path = "C:\\Users\\Sam Yu\\Desktop\\School\\4A\\Phys_437A_Research_Project"
+    data_path = os.path.join(project_path, "datasets\\r=0")
+    s_path = os.path.join(project_path, f"results\\{date.today()}")
+    lcs = load_dataset(dataset_path=data_path, verbose=True)
+    m, s = create_data_matrix(lcs, 10, 5, base_save_path=s_path, verbose=True)

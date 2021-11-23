@@ -146,6 +146,9 @@ class LCSystem:
         # get parameters from simulation
         self.sim_params = get_configuration_information(lc_data_path, confinement=confinement)
 
+        if "# of Ellipse" in self.sim_params:
+            self.sim_params["# of Ellipse"] = int(self.sim_params["# of Ellipse"])
+
         if confinement == "Circle":
             self.sim_params["r"] = 0
 

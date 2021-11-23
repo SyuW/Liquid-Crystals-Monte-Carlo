@@ -37,7 +37,6 @@ def load_dataset(dataset_path, verbose=False):
             lc = LCSystem(lc_data_path=full_path, confinement=confinement)
             num_of_particles = lc.sim_params['# of Ellipse']
             systems[num_of_particles] = lc
-
         # Simulation summary notes DNE
         else:
             lc = LCSystem(lc_data_path=full_path, confinement=confinement)
@@ -56,7 +55,7 @@ def load_dataset(dataset_path, verbose=False):
 def create_data_matrix(systems, num_of_features, num_of_samples,
                        start=1000000, end=1500000, base_save_path=None, verbose=False):
     """
-
+    Construct the data matrix for PCA input
     :param verbose:
     :param base_save_path:
     :param systems:
@@ -91,7 +90,9 @@ def create_data_matrix(systems, num_of_features, num_of_samples,
                     # subtract out the mean
                     # fv = fv - np.mean(fv)
                     samples[particle_number].append(fv)
+
     data_matrix = np.stack(data_matrix, axis=0)
+
     if verbose:
         print(f"Number of features used: {num_of_features}")
         print(f"Number of samples used: {num_of_samples}")
@@ -160,6 +161,14 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
                 break
         feature_vectors.append(fv)
     return feature_vectors, feature_particle_coords
+
+
+def visualize_feature_selection(systems):
+    return
+
+
+def plot_all_snapshots(systems):
+    return
 
 
 if __name__ == "__main__":

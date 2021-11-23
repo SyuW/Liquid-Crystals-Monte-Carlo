@@ -63,7 +63,7 @@ def create_data_matrix(systems, num_of_features, num_of_samples,
     :param num_of_samples:
     :param start:
     :param end:
-    :return:
+    :return: data_matrix, samples
     """
 
     # function for computing features
@@ -123,7 +123,6 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
     :param num_samples: total number of vectors to create
     :param feature_func: function for calculating features from coordinates
     :param nn_func: function for determining nearest neighbors
-
     :return: feature_vectors, feature_particle_coordinates
     """
     assert (num_features < len(coordinates)), \

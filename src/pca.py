@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 from datetime import date
 from sklearn.decomposition import PCA
+from time import gmtime, strftime
 
 
 def load_feature_data(path):
@@ -86,8 +87,7 @@ def create_phase_diagram(phase_boundaries):
     :param phase_boundaries:
     :return:
     """
-    with plt.ioff():
-        fig, ax = plt.subplots()
+
     return
 
 
@@ -112,10 +112,10 @@ def find_phase_transition(w1, samples, config, save_path, verbose=False):
     stds = []
     # scores_pca = pca.transform(data_matrix)[:, 0].reshape(len(samples.keys()), len(fvs))
     # compute scores for each density value
-    for i, particle_number in enumerate(sorted(samples.keys())):
+    for particle_number, sample in samples.items():
         fvs = samples[particle_number]
         if verbose:
-            print(f"No. particles: {particle_number}, No. feature vectors: {len(fvs)}")
+            print(f"No. particles: {particle_number}, No. feature vectors: {len(sample)}")
         # scores = scores_pca[i]
         scores = np.array([w1 @ vec for vec in fvs])
         # print(scores)
@@ -139,9 +139,24 @@ def find_phase_transition(w1, samples, config, save_path, verbose=False):
     # create plots
     with plt.ioff():
         fig, ax = plt.subplots()
-    # plotting mean and standard deviation together
+    # plotting normalized mean and normalized standard deviation together
     ax.set_xlabel(r"Density $\eta$")
-    ax.set_ylabel("Response")
+    ax.set_ylabel(r"${P_1}$")
+    ax.grid()
+    # plot the mean response
+    ax.plot(densities, means, color="orange", label="Mean")
+    ax.scatter(densities, means, color="orange")
+    # plot the std response
+    ax.plot(densities, stds, color="blue", label="Std")
+    ax.scatter(densities, stds, color="blue")
+    ax.set_title(f"Means and Stds plot (s={ns}, f={nf})")
+    ax.legend()
+    fig.savefig(os.path.join(save_path, "means_stds.png"))
+    ax.cla()
+    plt.close(fig)
+    # plotting normalized mean and normalized standard deviation together
+    ax.set_xlabel(r"Density $\eta$")
+    ax.set_ylabel(r"$\overline{P_1}$")
     ax.grid()
     # plot the mean response
     ax.plot(densities, norm_means, color="orange", label="Mean")
@@ -149,13 +164,13 @@ def find_phase_transition(w1, samples, config, save_path, verbose=False):
     # plot the std response
     ax.plot(densities, norm_stds, color="blue", label="Std")
     ax.scatter(densities, norm_stds, color="blue")
-    ax.set_title(f"PCA Summary for orientational features (s={ns}, f={nf})")
+    ax.set_title(f"Normalized Means and Stds plot (s={ns}, f={nf})")
     # mark the critical density
     ax.axvline(x=critical_density, linestyle="--", color="black", label="Critical density")
     ax.axvspan(xmin=critical_density - spacing, xmax=critical_density + spacing, color="red", alpha=0.2)
     ax.legend()
+    fig.savefig(os.path.join(save_path, "norm_means_stds.png"))
     ax.cla()
-    fig.savefig(os.path.join(save_path, "all.png"))
     plt.close(fig)
 
     print(fr"Critical density detected at {critical_density:.4f} by PCA")
@@ -166,22 +181,20 @@ def find_phase_transition(w1, samples, config, save_path, verbose=False):
 if __name__ == "__main__":
     from features import load_dataset, create_data_matrix
 
-    sys_config = {"R": 25, "r": 0, "b": 5, "a": 0.25, "nf": 10, "ns": 5}
+    sys_config = {"R": 25, "r": 0, "b": 5, "a": 0.25, "nf": 2, "ns": 1}
 
     project_path = "C:\\Users\\Sam Yu\\Desktop\\School\\4A\\Phys_437A_Research_Project"
     data_path = os.path.join(project_path, "datasets\\r=0")
-    results_path = os.path.join(project_path, f"results\\{date.today()}",
-                                f"features_{sys_config['nf']}_samples_{sys_config['ns']}")
+    current_time = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
+    results_path = os.path.join(project_path, f"results\\r={sys_config['r']}\\{current_time}")
 
-    if os.path.exists(results_path):
-        m, s = load_feature_data(results_path)
-    else:
-        lcs = load_dataset(dataset_path=data_path, verbose=False)
-        m, s = create_data_matrix(lcs, 10, 5,
-                                  base_save_path=os.path.join(project_path, f"results\\{date.today()}"),
-                                  verbose=False)
+    lcs = load_dataset(dataset_path=data_path, verbose=False)
+    m, s = create_data_matrix(lcs, sys_config["nf"], sys_config["ns"],
+                              save_path=results_path,
+                              verbose=True)
 
     # principal components and explained variance ratios
     ws, evrs = run_pca(pca_data=m, save_path=results_path)
     # find phase transition
-    eta_c = find_phase_transition(w1=ws[0], samples=s, )
+    eta_c = find_phase_transition(w1=np.abs(ws[0]), samples=s,
+                                  config=sys_config, save_path=results_path)

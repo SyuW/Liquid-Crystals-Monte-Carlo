@@ -4,6 +4,7 @@ import os
 import numpy as np
 
 from datetime import date
+from multiprocessing import Pool
 
 # custom imports
 from LiquidCrystalSystem import LCSystem
@@ -53,7 +54,7 @@ def load_dataset(dataset_path, verbose=False):
 
 
 def create_data_matrix(systems, num_of_features, num_of_samples,
-                       start=1000000, end=1500000, base_save_path=None, verbose=False):
+                       start=1000000, end=1500000, save_path=None, verbose=False):
     """
     Construct the data matrix for PCA input
     :param verbose:
@@ -90,9 +91,11 @@ def create_data_matrix(systems, num_of_features, num_of_samples,
                     # subtract out the mean
                     # fv = fv - np.mean(fv)
                     samples[particle_number].append(fv)
-
+    # stack feature vecs to form matrix
     data_matrix = np.stack(data_matrix, axis=0)
-
+    # remove empty elements from samples
+    samples = {n: sample for n, sample in samples.items() if sample != []}
+    # print out useful info
     if verbose:
         print(f"Number of features used: {num_of_features}")
         print(f"Number of samples used: {num_of_samples}")
@@ -100,8 +103,8 @@ def create_data_matrix(systems, num_of_features, num_of_samples,
         for n in sorted([int(x) for x in samples.keys()]):
             print(f"N: {n}, total # of samples: {len(samples[n])}")
     # save all the arrays so that they can be loaded in later stages
-    if base_save_path:
-        save_path = os.path.join(base_save_path, f"features_{num_of_features}_samples_{num_of_samples}", "../data")
+    if save_path:
+        save_path = os.path.join(save_path, "data")
         os.makedirs(save_path, exist_ok=True)
         # save the data matrix
         np.save(os.path.join(save_path, "data.npy"), data_matrix)
@@ -162,17 +165,10 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
     return feature_vectors, feature_particle_coords
 
 
-def visualize_feature_selection(systems):
-    return
-
-
-def plot_all_snapshots(systems):
-    return
-
-
 if __name__ == "__main__":
     project_path = "C:\\Users\\Sam Yu\\Desktop\\School\\4A\\Phys_437A_Research_Project"
     data_path = os.path.join(project_path, "datasets\\r=0")
     s_path = os.path.join(project_path, f"results\\{date.today()}")
     lcs = load_dataset(dataset_path=data_path, verbose=True)
-    m, s = create_data_matrix(lcs, 10, 5, base_save_path=s_path, verbose=True)
+
+    # m, s = create_data_matrix(lcs, 10, 5, base_save_path=s_path, verbose=True)

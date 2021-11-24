@@ -122,25 +122,20 @@ class LCSystem:
 
         return fig
 
-    def plot_batch_snapshots(self, save_dir, limit=50):
+    def plot_all_snapshots(self, save_dir):
         """
         Plot a batch of snapshots at once
         :param save_dir: directory to save at
-        :param limit: snapshot limit
         :return:
         """
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        count = 0
-        for step in sorted(self.snapshots.keys()):
-            save_path = os.path.join(save_dir, f"system_snapshot_at_step_{step}.png")
-            snapshot_plot = self.plot_snapshot(step)
-            snapshot_plot.savefig(save_path)
-
-            count += 1
-            if count > limit:
-                break
+        with plt.ioff():
+            for step in sorted(self.snapshots.keys()):
+                save_path = os.path.join(save_dir, f"system_snapshot_at_step_{step}.png")
+                snapshot_plot = self.plot_snapshot(step)
+                snapshot_plot.savefig(save_path)
 
     def __init__(self, lc_data_path, confinement="Annulus"):
         # get parameters from simulation

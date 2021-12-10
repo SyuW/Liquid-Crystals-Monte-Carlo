@@ -43,6 +43,9 @@ def run_pca(pca_data, save_path, create_plots=True, verbose=False):
         print(f"First principal component: {pca.components_[0]}")
         print(f"Explained variance ratios: {pca.explained_variance_ratio_}")
 
+    if not os.path.exists(save_path):
+        os.makedirs(save_path, exist_ok=True)
+
     num_of_features = pca_data.shape[1]
     if create_plots:
         with plt.ioff():
@@ -91,7 +94,7 @@ def create_phase_diagram(phase_boundaries):
     return
 
 
-def find_phase_transition(w1, samples, config, save_path, verbose=False):
+def find_phase_transition(w1, data_matrix, samples, config, save_path, verbose=False):
     """
 
     :param config:
@@ -124,6 +127,11 @@ def find_phase_transition(w1, samples, config, save_path, verbose=False):
         means.append(avg)
         stds.append(std)
 
+    pca = PCA(n_components=1)
+    pca.fit(data_matrix)
+    pca_fit = pca.transform(data_matrix)
+    inverse = pca.inverse_transform(pca_fit)
+
     # convert to numpy
     means = np.array(means)
     stds = np.array(stds)
@@ -139,9 +147,29 @@ def find_phase_transition(w1, samples, config, save_path, verbose=False):
     # create plots
     with plt.ioff():
         fig, ax = plt.subplots()
+
+    # plot the row means
+    row_means = [np.mean(row) for row in m][::50]
+    ax.plot(range(len(row_means)), row_means)
+    ax.set_xlabel(r"Row of $X$")
+    ax.set_ylabel("Mean of row")
+    ax.set_ylim(0, 1)
+    ax.set_title("Plot of row means of data matrix")
+    fig.savefig(os.path.join(save_path, "row_means.png"))
+    ax.cla()
+    # plot the means of samples
+    fv_means = [np.mean(np.mean(samples[N])) for N in samples]
+    ax.plot(sorted(samples.keys()), fv_means)
+    ax.set_xlabel("Particle Number, N")
+    ax.set_ylabel("Mean of samples for N")
+    ax.set_ylim(0, 1)
+    ax.grid()
+    ax.set_title("Plot of mean of samples for particle numbers")
+    fig.savefig(os.path.join(save_path, "samples_means.png"))
+    ax.cla()
     # plotting normalized mean and normalized standard deviation together
     ax.set_xlabel(r"Density $\eta$")
-    ax.set_ylabel(r"${P_1}$")
+    ax.set_ylabel(r"Order parameter ${P_1}$")
     ax.grid()
     # plot the mean response
     ax.plot(densities, means, color="orange", label="Mean")
@@ -153,10 +181,9 @@ def find_phase_transition(w1, samples, config, save_path, verbose=False):
     ax.legend()
     fig.savefig(os.path.join(save_path, "means_stds.png"))
     ax.cla()
-    plt.close(fig)
     # plotting normalized mean and normalized standard deviation together
     ax.set_xlabel(r"Density $\eta$")
-    ax.set_ylabel(r"$\overline{P_1}$")
+    ax.set_ylabel(r"Normalized order parameter $\bar{P}_1$")
     ax.grid()
     # plot the mean response
     ax.plot(densities, norm_means, color="orange", label="Mean")
@@ -181,7 +208,7 @@ def find_phase_transition(w1, samples, config, save_path, verbose=False):
 if __name__ == "__main__":
     from features import load_dataset, create_data_matrix
 
-    sys_config = {"R": 25, "r": 0, "b": 5, "a": 0.25, "nf": 2, "ns": 1}
+    sys_config = {"R": 25, "r": 0, "b": 5, "a": 0.25, "nf": 15, "ns": 8}
 
     project_path = "C:\\Users\\Sam Yu\\Desktop\\School\\4A\\Phys_437A_Research_Project"
     data_path = os.path.join(project_path, "datasets\\r=0")
@@ -190,11 +217,10 @@ if __name__ == "__main__":
 
     lcs = load_dataset(dataset_path=data_path, verbose=False)
     m, s = create_data_matrix(lcs, sys_config["nf"], sys_config["ns"],
-                              save_path=results_path,
                               verbose=True)
 
     # principal components and explained variance ratios
     ws, evrs = run_pca(pca_data=m, save_path=results_path)
     # find phase transition
-    eta_c = find_phase_transition(w1=np.abs(ws[0]), samples=s,
+    eta_c = find_phase_transition(w1=np.abs(ws[0]), data_matrix=m, samples=s,
                                   config=sys_config, save_path=results_path)

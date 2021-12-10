@@ -57,8 +57,8 @@ def create_data_matrix(systems, num_of_features, num_of_samples,
                        start=1000000, end=1500000, save_path=None, verbose=False):
     """
     Construct the data matrix for PCA input
+    :param save_path:
     :param verbose:
-    :param base_save_path:
     :param systems:
     :param num_of_features:
     :param num_of_samples:
@@ -77,6 +77,7 @@ def create_data_matrix(systems, num_of_features, num_of_samples,
         system_state_at_mc_step = systems[particle_number].snapshots
         # for monte carlo step, position array
         for mc_step, pos_array in system_at_n.snapshots.items():
+            # if Monte Carlo step of snapshot is between start and end
             if start <= mc_step <= end:
                 # Get snapshot of system at Monte Carlo step
                 snapshot = system_state_at_mc_step[mc_step]
@@ -91,6 +92,7 @@ def create_data_matrix(systems, num_of_features, num_of_samples,
                     # subtract out the mean
                     # fv = fv - np.mean(fv)
                     samples[particle_number].append(fv)
+
     # stack feature vecs to form matrix
     data_matrix = np.stack(data_matrix, axis=0)
     # remove empty elements from samples
@@ -101,7 +103,8 @@ def create_data_matrix(systems, num_of_features, num_of_samples,
         print(f"Number of samples used: {num_of_samples}")
         print(f"Shape of data matrix: {data_matrix.shape}")
         for n in sorted([int(x) for x in samples.keys()]):
-            print(f"N: {n}, total # of samples: {len(samples[n])}")
+            print(f"N: {n}, # of samples: {len(samples[n])}")
+        print(f"Total # of samples: {sum([len(samples[int(n)]) for n in samples.keys()])}")
     # save all the arrays so that they can be loaded in later stages
     if save_path:
         save_path = os.path.join(save_path, "data")
@@ -136,17 +139,26 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
         nn_sampling_rate = N / num_features - 1
     else:
         nn_sampling_rate = math.floor(N / num_features)
+
     # set a random seed for reproducibility
     rng = np.random.default_rng(666)
     probe_indices = rng.choice(N, size=num_samples, replace=False)
+
+    # choosing probe particle using normal distribution
+    # gaussian_points = np.random.multivariate_normal((0, 0), np.identity(2)*4, num_samples)
+    # probe_indices = []
+    # for p in gaussian_points:
+    #    dists = [nn_func(c[:2], p) for c in coordinates]
+    #    probe_indices.append(np.argmin(dists))
+
     # initialize stuff
     feature_vectors = []
-    feature_particle_coords = []
+    feature_particle_coords = dict()
     # select random probe particle for nearest neighbor distance
     for probe_index in probe_indices:
         # list of distances relative to probe particle
         probe_coord = coordinates[probe_index]
-        feature_particle_coords = [probe_coord]
+        feature_particle_coords[tuple(probe_coord)] = []
         # sort based on nearest distance to probe
         dist_to_P = lambda x: nn_func(x[:2], probe_coord[:2])
         nn_sorted = sorted(coordinates, key=dist_to_P)
@@ -156,7 +168,7 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
             # don't add the probe particle
             if (i > 0) and (i % nn_sampling_rate) == 0:
                 feature = feature_func(c, probe_coord)
-                feature_particle_coords.append(c)
+                feature_particle_coords[tuple(probe_coord)].append(c)
                 fv.append(feature)
             # stop adding features if total number is met
             if len(fv) == num_features:

@@ -76,6 +76,7 @@ class LCSystem:
         p = []
         colors = []
         for particle_pos in self.snapshots[mc_step]:
+            # convert from radians to degrees for matplotlib API
             ellipse_angle = (180 / np.pi) * (particle_pos[-1] % np.pi)
             if color_angles:
                 fill_color = color_map(ellipse_angle / 180)
@@ -93,6 +94,7 @@ class LCSystem:
         if color_angles:
             e = PatchCollection(p, cmap=color_map)
             e.set_array(colors)
+            e.set_clim([0, 1])
             cbar = fig.colorbar(e, label="Angle wrt x-axis", orientation="horizontal", pad=0.05)
 
         # add the extra ellipses

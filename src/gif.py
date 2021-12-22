@@ -23,7 +23,7 @@ if __name__ == "__main__":
     inner_radius = 0
     num_particles = 50
     start_mc_step = 1000000
-    end_mc_step = 2000000
+    end_mc_step = 1500000
 
     # base
     _base_ = "C:\\Users\\Sam Yu\\Desktop\\School\\4A\\Phys_437A_Research_Project\\visualizations\\"

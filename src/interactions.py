@@ -125,7 +125,7 @@ def compute_ellipse_ellipse_closest_approach(a1, b1, a2, b2, k1k2, k1d, k2d):
 
 def compute_ellipse_line_intersection(theta, x_c, y_c, a, b, k, d):
     """
-    Determine if an ellipse intersects a line
+    Determine if an ellipse intersects a line y=kx+d
 
     :param theta: angle wrt x-axis
     :param x_c: x-coordinate shift in center of mass
@@ -136,8 +136,17 @@ def compute_ellipse_line_intersection(theta, x_c, y_c, a, b, k, d):
     :param d: y-intercept of line or x-intercept if 'inf' flag is specified
     :return: true/false for intersection
     """
+
+    # degenerate case where line is vertical x = d
+    if k == "inf":
+        disc = (d * math.cos(theta) * math.sin(theta) / a ** 2 - d * math.cos(theta) * math.sin(theta) / b ** 2
+                + y_c * math.cos(theta) / b ** 2 - x_c * math.sin(theta) / a ** 2) ** 2 \
+               - (d ** 2 * math.cos(theta) ** 2 / a ** 2 + d ** 2 * math.sin(theta) ** 2 / b ** 2
+                  - 2 * d * x_c * math.cos(theta) / a ** 2 - 2 * d * y_c * math.sin(theta) / b ** 2 + x_c ** 2 / a ** 2
+                  + y_c ** 2 / b ** 2 - 1) * (math.cos(theta) ** 2 / b ** 2 + math.sin(theta) ** 2 / a ** 2)
+
     # discriminant for determining intersection with arbitrary line: y = kx + d
-    if k.isnumeric():
+    else:
         disc = (d * k * math.cos(theta) ** 2 / b ** 2 + d * k * math.sin(theta) ** 2 / a ** 2 - k * y_c * math.cos(
             theta) / b ** 2 + k * x_c * math.sin(theta) / a ** 2 - d * math.cos(theta) * math.sin(
             theta) / a ** 2 + d * math.cos(theta) * math.sin(theta) / b ** 2 - x_c * math.cos(
@@ -151,15 +160,6 @@ def compute_ellipse_line_intersection(theta, x_c, y_c, a, b, k, d):
                    theta) ** 2 / a ** 2 - 2 * k * math.cos(
                    theta) * math.sin(theta) / a ** 2 + 2 * k * math.cos(theta) * math.sin(theta) / b ** 2 + math.cos(
                    theta) ** 2 / a ** 2 + math.sin(theta) ** 2 / b ** 2)
-    # degenerate case where line is vertical x = d
-    elif k == "inf":
-        disc = (d * math.cos(theta) * math.sin(theta) / a ** 2 - d * math.cos(theta) * math.sin(theta) / b ** 2
-                + y_c * math.cos(theta) / b ** 2 - x_c * math.sin(theta) / a ** 2) ** 2 \
-               - (d ** 2 * math.cos(theta) ** 2 / a ** 2 + d ** 2 * math.sin(theta) ** 2 / b ** 2
-                  - 2 * d * x_c * math.cos(theta) / a ** 2 - 2 * d * y_c * math.sin(theta) / b ** 2 + x_c ** 2 / a ** 2
-                  + y_c ** 2 / b ** 2 - 1) * (math.cos(theta) ** 2 / b ** 2 + math.sin(theta) ** 2 / a ** 2)
-    else:
-        raise ValueError("k must be numeric or 'inf'")
 
     if disc > 0:
         return True

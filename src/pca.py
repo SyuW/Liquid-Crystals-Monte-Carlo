@@ -8,6 +8,9 @@ from datetime import date
 from sklearn.decomposition import PCA
 from time import gmtime, strftime
 
+# custom imports
+from utilities import get_feature_func, get_nearest_neighbor_func
+
 
 def load_feature_data(path):
     """
@@ -24,6 +27,11 @@ def load_feature_data(path):
             particle_number = int(basename.strip(".npy"))
             samples[particle_number] = np.load(os.path.join(path, "data", _path_))
     return matrix, samples
+
+
+def pca_procedure():
+
+    return
 
 
 def run_pca(pca_data, save_path, create_plots=True, verbose=False):
@@ -97,6 +105,7 @@ def create_phase_diagram(phase_boundaries):
 def find_phase_transition(w1, data_matrix, samples, config, save_path, verbose=False):
     """
 
+    :param data_matrix:
     :param config:
     :param save_path:
     :param verbose:
@@ -127,7 +136,7 @@ def find_phase_transition(w1, data_matrix, samples, config, save_path, verbose=F
         means.append(avg)
         stds.append(std)
 
-    pca = PCA(n_components=1)
+    pca = PCA(n_components=2)
     pca.fit(data_matrix)
     pca_fit = pca.transform(data_matrix)
     inverse = pca.inverse_transform(pca_fit)
@@ -153,16 +162,17 @@ def find_phase_transition(w1, data_matrix, samples, config, save_path, verbose=F
     ax.plot(range(len(row_means)), row_means)
     ax.set_xlabel(r"Row of $X$")
     ax.set_ylabel("Mean of row")
-    ax.set_ylim(0, 1)
+    #ax.set_ylim(0, 1)
+    ax.grid()
     ax.set_title("Plot of row means of data matrix")
     fig.savefig(os.path.join(save_path, "row_means.png"))
     ax.cla()
     # plot the means of samples
-    fv_means = [np.mean(np.mean(samples[N])) for N in samples]
+    fv_means = [np.mean(np.mean(samples[N])) for N in sorted(samples.keys())]
     ax.plot(sorted(samples.keys()), fv_means)
     ax.set_xlabel("Particle Number, N")
     ax.set_ylabel("Mean of samples for N")
-    ax.set_ylim(0, 1)
+    #ax.set_ylim(0, 1)
     ax.grid()
     ax.set_title("Plot of mean of samples for particle numbers")
     fig.savefig(os.path.join(save_path, "samples_means.png"))
@@ -208,7 +218,7 @@ def find_phase_transition(w1, data_matrix, samples, config, save_path, verbose=F
 if __name__ == "__main__":
     from features import load_dataset, create_data_matrix
 
-    sys_config = {"R": 25, "r": 0, "b": 5, "a": 0.25, "nf": 15, "ns": 8}
+    sys_config = {"R": 25, "r": 0, "b": 5, "a": 0.25, "nf": 19, "ns": 10}
 
     project_path = "C:\\Users\\Sam Yu\\Desktop\\School\\4A\\Phys_437A_Research_Project"
     data_path = os.path.join(project_path, "datasets\\r=0")
@@ -216,11 +226,18 @@ if __name__ == "__main__":
     results_path = os.path.join(project_path, f"results\\r={sys_config['r']}\\{current_time}")
 
     lcs = load_dataset(dataset_path=data_path, verbose=False)
+
+    # functions for computing features
+    ff = get_feature_func('euclidean_distance')
+    nf = get_nearest_neighbor_func('euclidean_distance')
+
     m, s = create_data_matrix(lcs, sys_config["nf"], sys_config["ns"],
-                              verbose=True)
+                              feature_func=ff, neighbor_func=nf,
+                              start=1000000, end=1500000, verbose=False)
 
     # principal components and explained variance ratios
     ws, evrs = run_pca(pca_data=m, save_path=results_path)
     # find phase transition
-    eta_c = find_phase_transition(w1=np.abs(ws[0]), data_matrix=m, samples=s,
+    # there's an ambiguity in the direction that the principal components point in, up to a global sign
+    eta_c = find_phase_transition(w1=-ws[0], data_matrix=m, samples=s,
                                   config=sys_config, save_path=results_path)

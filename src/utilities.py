@@ -1,10 +1,11 @@
 import numpy as np
 from numpy import cos, arctan
+from numpy.linalg import norm
 
 
 def get_feature_func(ff_spec):
-    ff_funcs = {'relative_orientation': lambda c1, c2: abs(cos(c1[-1] - c2[-1])),
-                'euclidean_distance': lambda c1, c2: (c1[:2] - c2[:2]) @ (c1[:2] - c2[:2])}
+    ff_funcs = {'relative_orientation': lambda c1, c2: abs(cos((c1[-1] - c2[-1]) % np.pi)),
+                'euclidean_distance': lambda c1, c2: norm(c1[:2] - c2[:2])}
     assert ff_spec in ff_funcs, f'Feature function specifier must be one of {list(ff_funcs.keys())}'
     return ff_funcs[ff_spec]
 

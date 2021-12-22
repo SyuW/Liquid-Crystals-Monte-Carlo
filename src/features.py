@@ -53,7 +53,7 @@ def load_dataset(dataset_path, verbose=False):
     return systems
 
 
-def create_data_matrix(systems, num_of_features, num_of_samples,
+def create_data_matrix(systems, num_of_features, num_of_samples, feature_func, neighbor_func,
                        start=1000000, end=1500000, save_path=None, verbose=False):
     """
     Construct the data matrix for PCA input
@@ -67,31 +67,29 @@ def create_data_matrix(systems, num_of_features, num_of_samples,
     :return: data_matrix, samples
     """
 
-    # function for computing features
-    feature_func = get_feature_func('relative_orientation')
     data_matrix = []
     samples = dict()
     # for particle number
-    for particle_number, system_at_n in systems.items():
-        samples[particle_number] = []
+    for particle_number in sorted(systems.keys()):
+        system_at_n = systems[particle_number]
         system_state_at_mc_step = systems[particle_number].snapshots
         # for monte carlo step, position array
         for mc_step, pos_array in system_at_n.snapshots.items():
-            # if Monte Carlo step of snapshot is between start and end
+            # if monte carlo step of snapshot is between start and end
             if start <= mc_step <= end:
-                # Get snapshot of system at Monte Carlo step
+                # get snapshot of system at Monte Carlo step
                 snapshot = system_state_at_mc_step[mc_step]
-                # Create the feature vectors
+                # create the feature vectors
                 fvs, _ = create_feature_vectors_from_snapshot(snapshot,
                                                               num_features=num_of_features,
                                                               num_samples=num_of_samples,
-                                                              feature_func=feature_func)
-                # Add to data matrix
+                                                              feature_func=feature_func,
+                                                              nn_func=neighbor_func)
+                # add to data matrix
                 data_matrix = data_matrix + fvs
-                for fv in fvs:
-                    # subtract out the mean
-                    # fv = fv - np.mean(fv)
-                    samples[particle_number].append(fv)
+
+                # add to samples
+                samples[particle_number] = fvs
 
     # stack feature vecs to form matrix
     data_matrix = np.stack(data_matrix, axis=0)

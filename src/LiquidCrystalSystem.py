@@ -94,8 +94,11 @@ class LCSystem:
         if color_angles:
             e = PatchCollection(p, cmap=color_map)
             e.set_array(colors)
-            e.set_clim([0, 1])
-            cbar = fig.colorbar(e, label="Angle wrt x-axis", orientation="horizontal", pad=0.05)
+            e.set_clim([0, np.pi])
+            cbar = fig.colorbar(e, label="Angle wrt x-axis",
+                                orientation="horizontal", pad=0.05)
+            cbar.set_ticks([0, np.pi/2, np.pi])
+            cbar.set_ticklabels(["0", r"$\pi/2$", r"$\pi$"])
 
         # add the extra ellipses
         for i, particle_pos in enumerate(extra_particles):
@@ -139,9 +142,9 @@ class LCSystem:
                 snapshot_plot = self.plot_snapshot(step)
                 snapshot_plot.savefig(save_path)
 
-    def __init__(self, lc_data_path, confinement="Annulus"):
+    def __init__(self, lc_data_path, confinement="Annulus", verbose=False):
         # get parameters from simulation
-        self.sim_params = get_configuration_information(lc_data_path, confinement=confinement)
+        self.sim_params = get_configuration_information(lc_data_path, confinement=confinement, verbose=verbose)
 
         if "# of Ellipse" in self.sim_params:
             self.sim_params["# of Ellipse"] = int(self.sim_params["# of Ellipse"])
@@ -175,14 +178,12 @@ class LCSystem:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process a liquid crystal system dataset")
-    parser.add_argument("--data-path", help="path to dataset")
-
     data_path = "C:\\Users\\Sam Yu\\Desktop\\School\\4A\\Phys_437A_Research_Project\\datasets\\r=0"
 
-    args = parser.parse_args()
-
     # plot all snapshots for all system sizes in dataset
-    _path_ = os.listdir(args.data_path)[-1]
-    full_path = os.path.join(args.data_path, _path_, "instanceRun")
-    lc = LCSystem(lc_data_path=full_path)
+    _path_ = os.listdir(data_path)[-1]
+    print(_path_)
+    full_path = os.path.join(data_path, _path_, "instanceRun")
+    lc = LCSystem(lc_data_path=full_path, confinement="Circle")
+
+    pass

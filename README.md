@@ -1,5 +1,5 @@
 # LiquidCrystals
-Confined liquid crystal simulations
+Confined liquid crystal simulations and analysis of phase transitions.
 
 # Requirements
 Requires Python 3.9.4.

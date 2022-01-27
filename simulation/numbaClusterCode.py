@@ -359,252 +359,6 @@ def init_Circ_H_Rd(n, l, a, b):
     return init_pos
 
 
-#@jit(cache=True)
-def MC_Circ_Hard(PosArray, d_pos, d_ang, steps, n, R, a, b, save_every, out_dir, step_start=0):
-    """
-    Monte Carlo simulation for hard ellipses with hard circle boundary
-    
-    :param: PosArray
-    :param: d_pos
-    :param: d_ang
-    :param: steps
-    :param: n
-    :param: R
-    :param: a
-    :param: b
-    :param: save_every
-    :param: out_dir
-    :param: step_start
-    """
-    
-    # name of results
-    main_folder_name = os.path.join(out_dir, f'circle_R{R}_n_{len(PosArray)}_k_{b/a}_HardBC')
-    folder_name = os.path.join(main_folder_name, 'instanceRun')
-    
-    # make the main folder
-    if os.path.exists(main_folder_name):
-        pass
-    else:
-        os.makedirs(main_folder_name)
-        
-    # pickle the simulation parameters to be used by other code (e.g. plotting)
-    var_fname = os.path.join(main_folder_name, "params.pickle")
-    pickled_vars = {"b":b, "a":a, "r":0, "R":R, "total_steps":steps, "save_every":save_every}
-    with open(var_fname, "wb") as f:
-        pickle.dump(pickled_vars, f)
-  
-    #save the initial state
-    fileNameArray = 'step_0.csv'
-    complete_name = os.path.join(main_folder_name, fileNameArray)
-    np.savetxt(complete_name, PosArray, delimiter=',')
-    
-    # total number of particles
-    n = len(PosArray)
-    
-    # fix and plot counters
-    fixCount = 0
-    plotCount = 0
-    moves = 0
-    accepted_moves = 0
-    
-    # iterate over all steps
-    for u in range(steps):
-        
-        # iterate over all particles 
-        for w in range(n):
-            
-            # adjust the move sizes 50 times per simulation
-            if fixCount == (np.ceil(steps / 50)):
-                
-                # reset the fix counter
-                fixCount = 0
-                
-                d_pos_old = d_pos
-                d_ang_old = d_ang
-                
-                # adjust move sizes
-                if accepted_moves / moves < 0.47:
-                    d_ang = 0.9 * d_ang
-                    d_pos = 0.9 * d_ang
-                elif accepted_moves / moves < 0.37:
-                    d_ang = 0.75 * d_ang
-                    d_pos = 0.75 * d_ang
-                elif accepted_moves / moves < 0.27:
-                    d_ang = 0.6 * d_ang
-                    d_pos = 0.6 * d_ang
-                elif accepted_moves / moves < 0.17:
-                    d_ang = 0.35 * d_ang
-                    d_pos = 0.35 * d_ang
-                elif accepted_moves / moves < 0.07:
-                    d_ang = 0.2 * d_ang
-                    d_pos = 0.2 * d_ang
-                elif accepted_moves / moves > 0.57:
-                    d_ang = 1.1 * d_ang
-                    d_pos = 1.1 * d_ang
-                elif accepted_moves / moves > 0.67:
-                    d_ang = 1.35 * d_ang
-                    d_pos = 1.35 * d_ang
-                elif accepted_moves / moves > 0.77:
-                    d_ang = 1.5 * d_ang
-                    d_pos = 1.5 * d_ang
-                elif accepted_moves / moves > 0.87:
-                    d_ang = 1.65 * d_ang
-                    d_pos = 1.65 * d_ang
-                elif accepted_moves / moves > 0.97:
-                    d_ang = 1.8 * d_ang
-                    d_pos = 1.8 * d_ang
-                
-                # print the adjustments at Monte Carlo step
-                msg = (f"Monte Carlo step [{u}/{steps}], Monte Carlo move [{w}/{n}]: "
-                       f"changed move sizes: d_pos - ({d_pos_old:.4f} -> {d_pos:.4f}), "
-                       f"d_ang - ({d_ang_old:.4f} -> {d_ang:.4f})"
-                      )
-                #print(msg)
-            
-            # uniformly random scaling
-            x = d_pos * rd.uniform(-1, 1)
-            y = d_pos * rd.uniform(-1, 1)
-            t = d_ang * rd.uniform(-1, 1)
-            
-            # apply proposed shifts and check for overlap
-            testX = PosArray[w, 0] + x
-            testY = PosArray[w, 1] + y
-            testT = PosArray[w, 2] + t
-            
-            # check if long axis definitely overlaps with boundary
-            if (testX ** 2 + testY ** 2) > ((R - 2 * b) ** 2):
-                
-                # check if short axis definitely overlaps with boundary
-                if (testX ** 2 + testY ** 2) > ((R - a) ** 2):
-                    overlapVar = True
-                
-                # apply circular boundary overlap check algorithm
-                elif (HardBoundaryCircle_Disc(R, a, b, testX, testY, testT) == True):
-                    overlapVar = True
-                    
-                else:
-                    
-                    # check for overlap with other ellipses
-                    for j in range(n):
-                        
-                        # center of mass distance between ellipses
-                        rij = np.sqrt((testX - PosArray[j, 0]) ** 2 + (testY - PosArray[j, 1]) ** 2)
-                        
-                        # c.o.m distance less than long-long end distance; may overlap
-                        if rij < (2 * b):
-                            
-                            # check for ellipse-ellipse overlap
-                            if j != w and (
-                                    overlap_Ellipse(testX, testY, testT, PosArray[j, 0], PosArray[j, 1], PosArray[j, 2],
-                                                    a, b) == True):
-                                overlapVar = True
-                                break
-                                
-                            else:
-                                overlapVar = False
-                                
-                        # c.o.m distance greater/equal to long end-to-end distance; no overlap        
-                        else:
-                            overlapVar = False
-            
-            else:
-                
-                # check for overlap with other ellipses
-                for j in range(n):
-                    
-                    # center of mass distance between ellipses
-                    rij = np.sqrt((testX - PosArray[j, 0]) ** 2 + (testY - PosArray[j, 1]) ** 2)
-                    
-                    # c.o.m distance less than long-long end distance; may overlap
-                    if rij < (2 * b):
-                        
-                        # check for ellipse-ellipse overlap
-                        if j != w and (
-                                overlap_Ellipse(testX, testY, testT, PosArray[j, 0], PosArray[j, 1], PosArray[j, 2], a,
-                                                b) == True):
-                            overlapVar = True
-                            break
-                            
-                        else:
-                            overlapVar = False
-                    
-                    # c.o.m distance greater/equal to long end-to-end distance; no overlap
-                    else:
-                        overlapVar = False
-            
-            # if overlap, don't accept the move
-            if overlapVar == True:
-                pass
-            
-            # accept the move
-            elif overlapVar == False:
-                accepted_moves += 1
-                PosArray[w, 0] = testX
-                PosArray[w, 1] = testY
-                PosArray[w, 2] = testT
-            
-            # increment moves/fix counters
-            moves += 1
-            fixCount += 1
-        
-        # increment the plot counter
-        plotCount += 1
-        
-        # periodically save snapshots
-        if plotCount == (save_every):
-            
-            # reset the plot counter
-            plotCount = 0
-
-            fileNameArray = 'step_.csv'
-            new_fileName = fileNameArray.split(".csv")[0] + str(u) + ".csv"
-            complete_name = os.path.join(main_folder_name, new_fileName)
-            np.savetxt(complete_name, PosArray, delimiter=',')
-            
-            # open and write to parameters file
-            with open(var_fname, "rb") as f:
-                params = pickle.load(f)
-            params["ang_shift"] = d_ang
-            params["pos_shift"] = d_pos
-            params["mc_step"] = u
-            params["pos_array"] = PosArray
-            with open(var_fname, "wb") as f:
-                pickle.dump(params, f)
-            
-            print("Monte Carlo step [{}/{}], Monte Carlo move [{}/{}]: plotted snapshot".format(u, steps, w, n))
-    
-    # packing fraction
-    area_fraction = n * a * b / (R ** 2)
-
-    print(f"Total Accepted Moves: {accepted_moves}")
-    print(f"Total Moves: {moves}")
-    print(f"Acceptance Rate: {accepted_moves / moves}")
-    
-    # save a snapshot of the final positions of the particles
-    fileNameArray = f'step_{steps}.csv'
-    complete_name = os.path.join(main_folder_name, fileNameArray)
-    np.savetxt(complete_name, PosArray, delimiter=',')
-    
-    file_name = "MonteCarlo_Circle_SimNotes.txt"
-    complete_name = os.path.join(main_folder_name, file_name)
-    
-    # write the simulation notes file
-    with open(complete_name, 'w+') as text_file:
-        text_file.write("Parameters" + "\r\n")
-        text_file.write("- - - - -" + "\r\n")
-        text_file.write("Monte Carlo steps: " + str(steps) + "\r\n")
-        text_file.write("R: " + str(R) + "\r\n")
-        text_file.write("d_pos / step size: " + str(d_pos) + "\r\n")
-        text_file.write("d_ang / step size: " + str(d_ang) + "\r\n")
-        text_file.write("# of Ellipse: " + str(n) + "\r\n")
-        text_file.write("reduced density: " + str(area_fraction) + "\r\n")
-        text_file.write("Semi Minor Axis: " + str(a) + "\r\n")
-        text_file.write("Semi Major Axis: " + str(b) + "\r\n")
-        text_file.write("Accepted Moves: " + str(accepted_moves) + "\r\n")
-        text_file.write("Total Moves: " + str(moves) + "\r\n")
-        text_file.write("Acceptance Rate: " + str(100 * (accepted_moves / moves)) + " %" + "\r\n")
-
-
 def init_Ann_H_Gr(n, a, b, R, r):
     """
     Initialize grid state using grid method
@@ -1035,7 +789,7 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, R, r, a, b, save_every, out_dir=o
         
     # pickle the simulation parameters to be used by other code (e.g. plotting)
     var_fname = os.path.join(main_folder_name, "params.pickle")
-    pickled_vars = {"b":b, "a":a, "r":r, "R":R, "total_steps":steps, "save_every":save_every}
+    pickled_vars = {"b":b, "a":a, "r":r, "R":R, "total_steps":steps, "current_step":0, "save_every":save_every}
     with open(var_fname, "wb") as f:
         pickle.dump(pickled_vars, f)
   
@@ -1293,58 +1047,334 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, R, r, a, b, save_every, out_dir=o
         text_file.write("Accepted Moves: " + str(accepted_moves) + "\r\n")
         text_file.write("Total Moves: " + str(moves) + "\r\n")
         text_file.write("Acceptance Rate: " + str(100 * (accepted_moves / moves)) + " %" + "\r\n")
+
+
+#@jit(cache=True)
+def MC_Circ_Hard(PosArray, out_dir, R, a, b, d_pos, d_ang, start_step, end_step, save_every):
+    """
+    Monte Carlo simulation for hard ellipses with hard circle boundary
+    
+    :param: PosArray
+    :param: d_pos
+    :param: d_ang
+    :param: steps
+    :param: n
+    :param: R
+    :param: a
+    :param: b
+    :param: save_every
+    :param: out_dir
+    :param: step_start
+    """
+        
+    # pickle the simulation parameters for checkpointing
+    var_fname = os.path.join(out_dir, "checkpoint.pickle")
+    checkpoint_vars = {"pos_array":PosArray, "b":b, "a":a, "r":0, "R":R, "d_pos":d_pos, "d_ang":d_ang,
+                       "start_step":start_step, "end_step":end_step, "save_every":save_every}
+    with open(var_fname, "wb") as f:
+        pickle.dump(checkpoint_vars, f)
+  
+    #save the initial state
+    fileNameArray = 'step_0.csv'
+    complete_name = os.path.join(out_dir, fileNameArray)
+    np.savetxt(complete_name, PosArray, delimiter=',')
+    
+    # total number of particles
+    n = len(PosArray)
+    
+    # fix and plot counters
+    fixCount = 0
+    plotCount = 0
+    moves = 0
+    accepted_moves = 0
+    
+    # iterate over all steps
+    for u in range(start_step, end_step+1):
+        
+        # iterate over all particles 
+        for w in range(n):
+            
+            # adjust the move sizes 50 times per simulation
+            if fixCount == (np.ceil(steps / 50)):
+                
+                # reset the fix counter
+                fixCount = 0
+                
+                d_pos_old = d_pos
+                d_ang_old = d_ang
+                
+                # adjust move sizes
+                if accepted_moves / moves < 0.47:
+                    d_ang = 0.9 * d_ang
+                    d_pos = 0.9 * d_ang
+                elif accepted_moves / moves < 0.37:
+                    d_ang = 0.75 * d_ang
+                    d_pos = 0.75 * d_ang
+                elif accepted_moves / moves < 0.27:
+                    d_ang = 0.6 * d_ang
+                    d_pos = 0.6 * d_ang
+                elif accepted_moves / moves < 0.17:
+                    d_ang = 0.35 * d_ang
+                    d_pos = 0.35 * d_ang
+                elif accepted_moves / moves < 0.07:
+                    d_ang = 0.2 * d_ang
+                    d_pos = 0.2 * d_ang
+                elif accepted_moves / moves > 0.57:
+                    d_ang = 1.1 * d_ang
+                    d_pos = 1.1 * d_ang
+                elif accepted_moves / moves > 0.67:
+                    d_ang = 1.35 * d_ang
+                    d_pos = 1.35 * d_ang
+                elif accepted_moves / moves > 0.77:
+                    d_ang = 1.5 * d_ang
+                    d_pos = 1.5 * d_ang
+                elif accepted_moves / moves > 0.87:
+                    d_ang = 1.65 * d_ang
+                    d_pos = 1.65 * d_ang
+                elif accepted_moves / moves > 0.97:
+                    d_ang = 1.8 * d_ang
+                    d_pos = 1.8 * d_ang
+                
+                # print the adjustments at Monte Carlo step
+                msg = (f"Monte Carlo step [{u}/{steps}], Monte Carlo move [{w}/{n}]: "
+                       f"changed move sizes: d_pos - ({d_pos_old:.4f} -> {d_pos:.4f}), "
+                       f"d_ang - ({d_ang_old:.4f} -> {d_ang:.4f})"
+                      )
+                #print(msg)
+            
+            # uniformly random scaling
+            x = d_pos * rd.uniform(-1, 1)
+            y = d_pos * rd.uniform(-1, 1)
+            t = d_ang * rd.uniform(-1, 1)
+            
+            # apply proposed shifts and check for overlap
+            testX = PosArray[w, 0] + x
+            testY = PosArray[w, 1] + y
+            testT = PosArray[w, 2] + t
+            
+            # check if long axis definitely overlaps with boundary
+            if (testX ** 2 + testY ** 2) > ((R - 2 * b) ** 2):
+                
+                # check if short axis definitely overlaps with boundary
+                if (testX ** 2 + testY ** 2) > ((R - a) ** 2):
+                    overlapVar = True
+                
+                # apply circular boundary overlap check algorithm
+                elif (HardBoundaryCircle_Disc(R, a, b, testX, testY, testT) == True):
+                    overlapVar = True
+                    
+                else:
+                    
+                    # check for overlap with other ellipses
+                    for j in range(n):
+                        
+                        # center of mass distance between ellipses
+                        rij = np.sqrt((testX - PosArray[j, 0]) ** 2 + (testY - PosArray[j, 1]) ** 2)
+                        
+                        # c.o.m distance less than long-long end distance; may overlap
+                        if rij < (2 * b):
+                            
+                            # check for ellipse-ellipse overlap
+                            if j != w and (
+                                    overlap_Ellipse(testX, testY, testT, PosArray[j, 0], PosArray[j, 1], PosArray[j, 2],
+                                                    a, b) == True):
+                                overlapVar = True
+                                break
+                                
+                            else:
+                                overlapVar = False
+                                
+                        # c.o.m distance greater/equal to long end-to-end distance; no overlap        
+                        else:
+                            overlapVar = False
+            
+            else:
+                
+                # check for overlap with other ellipses
+                for j in range(n):
+                    
+                    # center of mass distance between ellipses
+                    rij = np.sqrt((testX - PosArray[j, 0]) ** 2 + (testY - PosArray[j, 1]) ** 2)
+                    
+                    # c.o.m distance less than long-long end distance; may overlap
+                    if rij < (2 * b):
+                        
+                        # check for ellipse-ellipse overlap
+                        if j != w and (
+                                overlap_Ellipse(testX, testY, testT, PosArray[j, 0], PosArray[j, 1], PosArray[j, 2], a,
+                                                b) == True):
+                            overlapVar = True
+                            break
+                            
+                        else:
+                            overlapVar = False
+                    
+                    # c.o.m distance greater/equal to long end-to-end distance; no overlap
+                    else:
+                        overlapVar = False
+            
+            # if overlap, don't accept the move
+            if overlapVar == True:
+                pass
+            
+            # accept the move
+            elif overlapVar == False:
+                accepted_moves += 1
+                PosArray[w, 0] = testX
+                PosArray[w, 1] = testY
+                PosArray[w, 2] = testT
+            
+            # increment moves/fix counters
+            moves += 1
+            fixCount += 1
+        
+        # increment the plot counter
+        plotCount += 1
+        
+        # periodically save snapshots
+        if plotCount == (save_every):
+            
+            # reset the plot counter
+            plotCount = 0
+
+            fileNameArray = 'step_.csv'
+            new_fileName = fileNameArray.split(".csv")[0] + str(u) + ".csv"
+            complete_name = os.path.join(out_dir, new_fileName)
+            np.savetxt(complete_name, PosArray, delimiter=',')
+            
+            # open and write to parameters file
+            with open(var_fname, "rb") as f:
+                checkpoint_vars = pickle.load(f)
+            checkpoint_vars["ang_shift"] = d_ang
+            checkpoint_vars["pos_shift"] = d_pos
+            checkpoint_vars["current_step"] = u
+            checkpoint_vars["pos_array"] = PosArray
+            with open(var_fname, "wb") as f:
+                pickle.dump(checkpoint_vars, f)
+            
+            print("Monte Carlo step [{}/{}], Monte Carlo move [{}/{}]: plotted snapshot".format(u, steps, w, n))
+    
+    # packing fraction
+    area_fraction = n * a * b / (R ** 2)
+
+    print(f"Total Accepted Moves: {accepted_moves}")
+    print(f"Total Moves: {moves}")
+    print(f"Acceptance Rate: {accepted_moves / moves}")
+    
+    # save a snapshot of the final positions of the particles
+    fileNameArray = f'step_{steps}.csv'
+    complete_name = os.path.join(out_dir, fileNameArray)
+    np.savetxt(complete_name, PosArray, delimiter=',')
+    
+    # write the simulation notes file
+    file_name = "MonteCarlo_Circle_SimNotes.txt"
+    complete_name = os.path.join(out_dir, file_name)
+    with open(complete_name, 'w+') as text_file:
+        text_file.write("Parameters" + "\r\n")
+        text_file.write("- - - - -" + "\r\n")
+        text_file.write("Monte Carlo steps: " + str(steps) + "\r\n")
+        text_file.write("R: " + str(R) + "\r\n")
+        text_file.write("d_pos / step size: " + str(d_pos) + "\r\n")
+        text_file.write("d_ang / step size: " + str(d_ang) + "\r\n")
+        text_file.write("# of Ellipse: " + str(n) + "\r\n")
+        text_file.write("reduced density: " + str(area_fraction) + "\r\n")
+        text_file.write("Semi Minor Axis: " + str(a) + "\r\n")
+        text_file.write("Semi Major Axis: " + str(b) + "\r\n")
+        text_file.write("Accepted Moves: " + str(accepted_moves) + "\r\n")
+        text_file.write("Total Moves: " + str(moves) + "\r\n")
+        text_file.write("Acceptance Rate: " + str(100 * (accepted_moves / moves)) + " %" + "\r\n")
     
     
 if __name__ == "__main__":
     
+    # start the timer
+    import time
+    start = time.perf_counter()
+    
+    # argument parsing
     parser = argparse.ArgumentParser(description="Run a Monte Carlo simulation of liquid crystals")
-    parser.add_argument("-N", type=int, help="Number of particles to simulate")
+    
+    # dimensions and shape of the confinement geometry
+    parser.add_argument("--confinement", choices=["Circle", "Annulus"], help="Type of confinement to simulate")
     parser.add_argument("--outer_radius", type=float, help="Radius of outer boundary")
     parser.add_argument("--outer_increment", type=float, help="Increment to outer boundary")
     parser.add_argument("--inner_radius", type=float, help="Radius of inner boundary")
+    
+    # characteristics of simulated particles
+    parser.add_argument("-N", type=int, help="Number of particles to simulate")
     parser.add_argument("--long_axis", type=float, help="Semi-major axis of ellipse")
     parser.add_argument("--short_axis", type=float, help="Semi-minor axis of ellipse")
+    
+    # related to the Monte Carlo simulation
     parser.add_argument("--steps", type=int, help="Number of steps to run simulation for")
-    parser.add_argument("--confinement", choices=["Circle", "Annulus"], help="Type of confinement to simulate")
-    parser.add_argument("--res-path", help="Path to store results at")
-    parser.add_argument("--pos_array_path", help="Path of input positions array")
-    parser.add_argument("--checkpoint_file", type=int, help="checkpoint file to use")
     parser.add_argument("--save_every", type=int, help="Number of every MC steps to save system state")
+    
+    # saving and checkpointing
+    parser.add_argument("--res-path", help="Path to store results at")
+    parser.add_argument("--checkpoint", type=int, help="checkpoint file to use")
     
     args = parser.parse_args()
     
-    # minor and major axes respectively
-    a = args.short_axis
-    b = args.long_axis
+    # load parameters from checkpoint
+    if args.checkpoint is not None:
+        print("Loading parameters from checkpoint file")
+        with open(args.checkpoint, "rb") as in_f:
+            params = pickle.load(in_f)
+        initial_state = params["pos_array"]
+        a = params["a"]
+        b = params["b"]
+        outer_radius = params["R"]
+        inner_radius = params["r"]
+        start_step = params["current_step"]
+        end_step = params["total_steps"]
+        step_xy = params["d_pos"]
+        step_th = params["d_ang"]
+        save_every = params["save_every"]
     
-    step_xy = 0.5 * args.inner_radius
-    step_th = np.pi / 2
+    # if no checkpoint, create the initial state from scratch
+    else:
+        print("Checkpoint file not provided. Creating the initial state from scratch")
+        
+        # get parameters from command line arguments
+        a = args.short_axis
+        b = args.long_axis
+        inner_radius = args.inner_radius
+        outer_radius = args.outer_radius
+        start_step = 0
+        end_step = args.steps
+        step_xy = 0.5 * inner_radius
+        step_th = np.pi / 2
+        dely = 0  # % of a
+        delx = 0  # % of a
     
-    dely = 0  # % of a
-    delx = 0  # % of a
+        # create the initial state from scratch
+        if confinement = "Circle":
+            initial_state = init_Circ_H_GrC(args.N, a, b, args.outer_radius, dely, delx)[0]
+            print(f"Time for circle boundary state initialization for N={args.N}: {time.perf_counter()-start} seconds.")
+        elif confinement = "Annulus":
+            initial_state = init_Ann_H_GrC(args.N, a, b, args.outer_radius, args.inner_radius, dely, delx)[0]
+            print(f"Time for annular boundary state initialization for N={args.N}: {time.perf_counter()-start} seconds")
+        else:
+            raise NotImplementedError("Confinement type not supported")
     
-    import time
-    start = time.perf_counter()
+    # save directory for simulation outputs
+    out_dir = args.res_dir
+    if os.path.exists(out_dir):
+        pass
+    else:
+        os.makedirs(out_dir)
     
     # circle monte carlo
     if args.confinement == "Circle":
         
-        if args.checkpoint_file:
-            initial_state = init_Circ_H_GrC(args.N, a, b, args.outer_radius, dely, delx)[0]
-            print("Restarting simulation from checkpoint")
-            
-        else:
-            initial_state = init_Circ_H_GrC(args.N, a, b, args.outer_radius, dely, delx)[0]
-            print(f"Time for circle boundary state initialization for N={args.N}: {time.perf_counter()-start} seconds.")
-            
-        MC_Circ_Hard(initial_state, step_xy, step_th, args.steps, args.N, args.outer_radius+args.outer_increment,
-                     a, b, save_every=args.save_every, out_dir=args.res_path)
+        inc_scaling = 0.35
+        MC_Circ_Hard(initial_state, args.res_dir, R=outer_radius+args.outer_increment*inc_scaling,
+                     a=a, b=b, d_pos=step_xy, d_ang=step_th,
+                     start_step=start_step, end_step=end_step, save_every=save_every)
     
     # annulus monte carlo
     elif args.confinement == "Annulus":
         
-        initial_state = init_Ann_H_GrC(args.N, a, b, args.outer_radius, args.inner_radius, dely, delx)[0]
-        print(f"Time for annular boundary state initialization for N={args.N}: {time.perf_counter()-start} seconds")
         MC_Ann_Hard(initial_state, step_xy, step_th, args.steps, args.outer_radius, args.inner_radius,
                     a, b, save_every=args.save_every, out_dir=args.res_path)
     

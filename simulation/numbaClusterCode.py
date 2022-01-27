@@ -1,15 +1,17 @@
 import numpy as np
 from numpy.linalg.linalg import norm
 import numpy.random as rd
-import os
+
 from math import trunc
+from numba import jit
 from operator import itemgetter
-import sys
-import math
 
 import argparse
+import math
+import os
+import pickle
+import sys
 
-from numba import jit
 
 
 def dist(x1, y1, x2, y2):
@@ -275,8 +277,8 @@ def init_Circ_H_Gr(n, a, b, R):
         posArr = newArr
         c += 1
 
-    print(len(posArr))
-    print(len(redE))
+    #print(len(posArr))
+    #print(len(redE))
     newLength = len(posArr)
 
     if n >= newLength:
@@ -290,7 +292,7 @@ def init_Circ_H_Gr(n, a, b, R):
             posArr = newArr
             d += 1
 
-    print(len(posArr))
+    #print(len(posArr))
 
     return [posArr, redE]
 
@@ -358,7 +360,7 @@ def init_Circ_H_Rd(n, l, a, b):
 
 
 #@jit(cache=True)
-def MC_Circ_Hard(PosArray, d_pos, d_ang, steps, n, l, a, b, out_dir):
+def MC_Circ_Hard(PosArray, d_pos, d_ang, steps, n, R, a, b, save_every, out_dir, step_start=0):
     """
     Monte Carlo simulation for hard ellipses with hard circle boundary
     
@@ -367,14 +369,16 @@ def MC_Circ_Hard(PosArray, d_pos, d_ang, steps, n, l, a, b, out_dir):
     :param: d_ang
     :param: steps
     :param: n
-    :param: l
+    :param: R
     :param: a
     :param: b
+    :param: save_every
     :param: out_dir
+    :param: step_start
     """
     
     # name of results
-    main_folder_name = os.path.join(out_dir, f'circle_R{l}_n_{len(PosArray)}_k_{b/a}_HardBC')
+    main_folder_name = os.path.join(out_dir, f'circle_R{R}_n_{len(PosArray)}_k_{b/a}_HardBC')
     folder_name = os.path.join(main_folder_name, 'instanceRun')
     
     # make the main folder
@@ -382,23 +386,16 @@ def MC_Circ_Hard(PosArray, d_pos, d_ang, steps, n, l, a, b, out_dir):
         pass
     else:
         os.makedirs(main_folder_name)
-    
-    # if the folder already exists, increment name by 1
-    if os.path.exists(folder_name):
-        expand = 0
-        while True:
-            expand += 1
-            new_folder_name = folder_name + str(expand)
-            if os.path.exists(new_folder_name):
-                continue
-            else:
-                folder_name = new_folder_name
-                break
-    os.makedirs(folder_name)
-
+        
+    # pickle the simulation parameters to be used by other code (e.g. plotting)
+    var_fname = os.path.join(main_folder_name, "params.pickle")
+    pickled_vars = {"b":b, "a":a, "r":0, "R":R, "total_steps":steps, "save_every":save_every}
+    with open(var_fname, "wb") as f:
+        pickle.dump(pickled_vars, f)
+  
     #save the initial state
-    fileNameArray = 'PosArray.csv'
-    complete_name = os.path.join(folder_name, fileNameArray)
+    fileNameArray = 'step_0.csv'
+    complete_name = os.path.join(main_folder_name, fileNameArray)
     np.savetxt(complete_name, PosArray, delimiter=',')
     
     # total number of particles
@@ -462,7 +459,7 @@ def MC_Circ_Hard(PosArray, d_pos, d_ang, steps, n, l, a, b, out_dir):
                        f"changed move sizes: d_pos - ({d_pos_old:.4f} -> {d_pos:.4f}), "
                        f"d_ang - ({d_ang_old:.4f} -> {d_ang:.4f})"
                       )
-                print(msg)
+                #print(msg)
             
             # uniformly random scaling
             x = d_pos * rd.uniform(-1, 1)
@@ -475,14 +472,14 @@ def MC_Circ_Hard(PosArray, d_pos, d_ang, steps, n, l, a, b, out_dir):
             testT = PosArray[w, 2] + t
             
             # check if long axis definitely overlaps with boundary
-            if (testX ** 2 + testY ** 2) > ((l - 2 * b) ** 2):
+            if (testX ** 2 + testY ** 2) > ((R - 2 * b) ** 2):
                 
                 # check if short axis definitely overlaps with boundary
-                if (testX ** 2 + testY ** 2) > ((l - a) ** 2):
+                if (testX ** 2 + testY ** 2) > ((R - a) ** 2):
                     overlapVar = True
                 
                 # apply circular boundary overlap check algorithm
-                elif (HardBoundaryCircle_Disc(l, a, b, testX, testY, testT) == True):
+                elif (HardBoundaryCircle_Disc(R, a, b, testX, testY, testT) == True):
                     overlapVar = True
                     
                 else:
@@ -554,39 +551,49 @@ def MC_Circ_Hard(PosArray, d_pos, d_ang, steps, n, l, a, b, out_dir):
         plotCount += 1
         
         # periodically save snapshots
-        if plotCount == (np.ceil(steps / 100)):
+        if plotCount == (save_every):
             
             # reset the plot counter
             plotCount = 0
 
-            fileNameArray = 'PosArray.csv'
+            fileNameArray = 'step_.csv'
             new_fileName = fileNameArray.split(".csv")[0] + str(u) + ".csv"
-            complete_name = os.path.join(folder_name, new_fileName)
+            complete_name = os.path.join(main_folder_name, new_fileName)
             np.savetxt(complete_name, PosArray, delimiter=',')
+            
+            # open and write to parameters file
+            with open(var_fname, "rb") as f:
+                params = pickle.load(f)
+            params["ang_shift"] = d_ang
+            params["pos_shift"] = d_pos
+            params["mc_step"] = u
+            params["pos_array"] = PosArray
+            with open(var_fname, "wb") as f:
+                pickle.dump(params, f)
             
             print("Monte Carlo step [{}/{}], Monte Carlo move [{}/{}]: plotted snapshot".format(u, steps, w, n))
     
     # packing fraction
-    area_fraction = n * a * b / (l ** 2)
+    area_fraction = n * a * b / (R ** 2)
 
     print(f"Total Accepted Moves: {accepted_moves}")
     print(f"Total Moves: {moves}")
     print(f"Acceptance Rate: {accepted_moves / moves}")
     
     # save a snapshot of the final positions of the particles
-    fileNameArray = 'FinalPosArray.csv'
-    complete_name = os.path.join(folder_name, fileNameArray)
+    fileNameArray = f'step_{steps}.csv'
+    complete_name = os.path.join(main_folder_name, fileNameArray)
     np.savetxt(complete_name, PosArray, delimiter=',')
     
     file_name = "MonteCarlo_Circle_SimNotes.txt"
-    complete_name = os.path.join(folder_name, file_name)
+    complete_name = os.path.join(main_folder_name, file_name)
     
     # write the simulation notes file
     with open(complete_name, 'w+') as text_file:
         text_file.write("Parameters" + "\r\n")
         text_file.write("- - - - -" + "\r\n")
         text_file.write("Monte Carlo steps: " + str(steps) + "\r\n")
-        text_file.write("R: " + str(l) + "\r\n")
+        text_file.write("R: " + str(R) + "\r\n")
         text_file.write("d_pos / step size: " + str(d_pos) + "\r\n")
         text_file.write("d_ang / step size: " + str(d_ang) + "\r\n")
         text_file.write("# of Ellipse: " + str(n) + "\r\n")
@@ -598,7 +605,16 @@ def MC_Circ_Hard(PosArray, d_pos, d_ang, steps, n, l, a, b, out_dir):
         text_file.write("Acceptance Rate: " + str(100 * (accepted_moves / moves)) + " %" + "\r\n")
 
 
-def init_Ann_H_Gr(n, a, b, R, r2):
+def init_Ann_H_Gr(n, a, b, R, r):
+    """
+    Initialize grid state using grid method
+    
+    :param: n - number of particles
+    :param: a - short axis length
+    :param: b - long axis length
+    :param: R - outer radius
+    :param: r - inner radius
+    """
     v = np.ceil(R / a)
     h = np.ceil(R / b)
 
@@ -619,9 +635,9 @@ def init_Ann_H_Gr(n, a, b, R, r2):
 
     for p in range(len(posArr)):
 
-        if posArr[p, 0] ** 2 + posArr[p, 1] ** 2 > R ** 2 or posArr[p, 0] ** 2 + posArr[p, 1] ** 2 < r2 ** 2 or (
+        if posArr[p, 0] ** 2 + posArr[p, 1] ** 2 > R ** 2 or posArr[p, 0] ** 2 + posArr[p, 1] ** 2 < r ** 2 or (
                 HardBoundaryCircle_Disc(R, a, b, posArr[p, 0], posArr[p, 1], posArr[p, 2]) == True) or (
-                HardBoundaryCircle_Disc(r2, a, b, posArr[p, 0], posArr[p, 1], posArr[p, 2]) == True):
+                HardBoundaryCircle_Disc(r, a, b, posArr[p, 0], posArr[p, 1], posArr[p, 2]) == True):
             indexDel.append(p)
             incorrect.append(posArr[p, :])
             nDel += 1
@@ -657,13 +673,25 @@ def init_Ann_H_Gr(n, a, b, R, r2):
     return [posArr, redE]
 
 
-def init_Ann_H_GrC(n, a, b, R, r2, d, e):
+def init_Ann_H_GrC(n, a, b, R, r, d, e):
+    """
+    Initialize grid state using grid chord method
+    
+    :param: n - number of particles
+    :param: a - semi-minor axis
+    :param: b - semi-major axis
+    :param: r - inner radius
+    :param: R - outer radius
+    :param: d - y shift
+    :param: e - x shift
+    """
+    
     ## When an exact contact distance method is reliable use that instead of xStar
 
     a_tilde = a * (1 + (d / 100))
     b_tilde = b + a * ((e / 100))
 
-    Nv1 = int(np.floor(r2 / a_tilde))
+    Nv1 = int(np.floor(r / a_tilde))
 
     if Nv1 % 2 == 0:
         ygrid1 = np.linspace(-(Nv1 * a_tilde), Nv1 * a_tilde, Nv1)
@@ -674,7 +702,7 @@ def init_Ann_H_GrC(n, a, b, R, r2, d, e):
     diffArray = []
     totalN = 0
     for k in range(Nv1):
-        xStar = np.sqrt(r2 ** 2 - (ygrid1[k]) ** 2)
+        xStar = np.sqrt(r ** 2 - (ygrid1[k]) ** 2)
         diff = R - xStar
         Nh1 = 2 * int(np.floor(diff / (2 * b_tilde)))
         diffArray.append([xStar, Nh1])
@@ -702,11 +730,11 @@ def init_Ann_H_GrC(n, a, b, R, r2, d, e):
         else:
             pass
 
-    Nv2_half = int(np.floor((R - r2) / (2 * a_tilde)))
+    Nv2_half = int(np.floor((R - r) / (2 * a_tilde)))
 
     if Nv2_half != 0:
 
-        up = np.linspace(r2 + 2 * a_tilde, r2 + (2 * Nv2_half) * a_tilde, Nv2_half)
+        up = np.linspace(r + 2 * a_tilde, r + (2 * Nv2_half) * a_tilde, Nv2_half)
         down = -1 * up
         ygrid2 = np.concatenate((up, down), axis=0)
 
@@ -769,8 +797,8 @@ def init_Ann_H_GrC(n, a, b, R, r2, d, e):
         posArr = newArr
         c += 1
 
-    print(len(posArr))
-    print(len(redE))
+    #print(len(posArr))
+    #print(len(redE))
     newLength = len(posArr)
 
     if n >= newLength:
@@ -784,12 +812,22 @@ def init_Ann_H_GrC(n, a, b, R, r2, d, e):
             posArr = newArr
             de += 1
 
-    print(len(posArr))
+    #print(len(posArr))
 
     return [posArr, redE]
 
 
 def init_Ann_H_Rd(n, l, r2, a, b):
+    """
+    Random initialization of particle positions for hard annular BCs
+    
+    :param: n
+    :param: l
+    :param: r2
+    :param: a
+    :param: b
+    """
+    
     # FIX 0.2
 
     init_pos = np.zeros((n, 3))
@@ -946,8 +984,8 @@ def init_Circ_H_GrC(n, a, b, R, d, e):
         posArr = newArr
         c += 1
 
-    print(len(posArr))
-    print(len(redE))
+    #print(len(posArr))
+    #print(len(redE))
     newLength = len(posArr)
 
     if n >= newLength:
@@ -961,13 +999,13 @@ def init_Circ_H_GrC(n, a, b, R, d, e):
             posArr = newArr
             de += 1
 
-    print(len(posArr))
+    #print(len(posArr))
 
     return [posArr, redE]
 
 
 #@jit()
-def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, l, r2, a, b, save_every, out_dir=os.getcwd()):
+def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, R, r, a, b, save_every, out_dir=os.getcwd()):
     """
     Run Monte Carlo simulation with hard BCs for annular geometry
     
@@ -975,8 +1013,8 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, l, r2, a, b, save_every, out_dir=
     :param: d_pos - magnitude of positional shift
     :param: d_ang - magnitude of angular shift
     :param: steps - total number of steps in simulation
-    :param: l - outer radius of annular confinement
-    :param: r2 - inner radius of annular confinement
+    :param: R - outer radius of annular confinement
+    :param: r - inner radius of annular confinement
     :param: a - length of short axis
     :param: b - length of long axis
     :param: save_every - number of every MC steps to save snapshot
@@ -984,50 +1022,30 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, l, r2, a, b, save_every, out_dir=
 
     moves = 0
     accepted_moves = 0
-    imageName = "step_figure.png"
     numE = len(PosArray)
     kVal = b / a
-    file_name = "MonteCarlo_Annulus_SimNotes.txt"
 
-    main_folder_name = os.path.join(out_dir, 'annulus_R{}_r{}_n_{}_k_{}_HardBC'.format(l, r2, numE, kVal))
-    folder_name = os.path.join(main_folder_name, 'instanceRun')
+    main_folder_name = os.path.join(out_dir, 'annulus_R{}_r{}_n_{}_k_{}_HardBC'.format(R, r, numE, kVal))
     
     # make the directory to save results at
     if os.path.exists(main_folder_name):
         pass
     else:
         os.makedirs(main_folder_name)
-    
-    # instanceRun1 if instanceRun already exists, ...
-    if os.path.exists(folder_name):
-        expand = 0
-        while True:
-            expand += 1
-            new_folder_name = folder_name + str(expand)
-            if os.path.exists(new_folder_name):
-                continue
-            else:
-                folder_name = new_folder_name
-                break
-    os.makedirs(folder_name)
-    
-    # save at least ~100 times during a simulation run
-    if save_every <= np.ceil(steps / 100):
-        pass
-    else:
-        save_every = np.ceil(steps / 100):
-
+        
+    # pickle the simulation parameters to be used by other code (e.g. plotting)
+    var_fname = os.path.join(main_folder_name, "params.pickle")
+    pickled_vars = {"b":b, "a":a, "r":r, "R":R, "total_steps":steps, "save_every":save_every}
+    with open(var_fname, "wb") as f:
+        pickle.dump(pickled_vars, f)
+  
     # save the initial state
-    fileNameArray = 'PosArray.csv'
-    complete_name = os.path.join(folder_name, fileNameArray)
+    initial_array_name = 'step_0.csv'
+    complete_name = os.path.join(main_folder_name, initial_array_name)
     np.savetxt(complete_name, PosArray, delimiter=',')
-
-    stepsArr = np.linspace(0, steps, steps + 1)
     
     # total number of particles
     n = len(PosArray)
-
-    fullImageName = os.path.join(folder_name, imageName)
     
     # minimum positional/angular shift magnitudes
     minPos = .05 * a
@@ -1093,7 +1111,7 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, l, r2, a, b, save_every, out_dir=
                        f"changed move sizes: d_pos - ({d_pos_old:.4f} -> {d_pos:.4f}), "
                        f"d_ang - ({d_ang_old:.4f} -> {d_ang:.4f})"
                       )
-                print(msg)
+                #print(msg)
             
             # compute uniformly random coordinate shift magnitudes
             x = d_pos * rd.uniform(-1, 1)
@@ -1106,25 +1124,25 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, l, r2, a, b, save_every, out_dir=
             testT = PosArray[w, 2] + t
             
             # check for possible overlaps with other particles or boundary
-            if (testX ** 2 + testY ** 2) > ((l - b) ** 2) or (testX ** 2 + testY ** 2) < ((r2 + 2 * b) ** 2):
+            if (testX ** 2 + testY ** 2) > ((R - b) ** 2) or (testX ** 2 + testY ** 2) < ((r + 2 * b) ** 2):
                 
                 # check if ellipse rotation would cause boundary overlap
-                if (testX ** 2 + testY ** 2) > ((l - b) ** 2) and (testX ** 2 + testY ** 2) < ((r2 + 2 * b) ** 2):
+                if (testX ** 2 + testY ** 2) > ((R - b) ** 2) and (testX ** 2 + testY ** 2) < ((r + 2 * b) ** 2):
                     
                     # ellipse can't be within one short axis length of outer boundary
-                    if (testX ** 2 + testY ** 2) > ((l - a) ** 2):
+                    if (testX ** 2 + testY ** 2) > ((R - a) ** 2):
                         overlapVar = True
                         
                     # ellipse can't be within one short axis length of inner boundary
-                    elif (testX ** 2 + testY ** 2) < ((r2 + a) ** 2):
+                    elif (testX ** 2 + testY ** 2) < ((r + a) ** 2):
                         overlapVar = True
                         
                     # check for overlap with inner boundary
-                    elif HardBoundaryCircle_Disc(r2 * 1.02, a, b, testX, testY, testT) == True:
+                    elif HardBoundaryCircle_Disc(r * 1.02, a, b, testX, testY, testT) == True:
                         overlapVar = True
                     
                     # check for overlap with outer boundary
-                    elif HardBoundaryCircle_Disc(l, a, b, testX, testY, testT) == True:
+                    elif HardBoundaryCircle_Disc(R, a, b, testX, testY, testT) == True:
                         overlapVar = True
                         
                     # check for overlap with other ellipses
@@ -1142,14 +1160,14 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, l, r2, a, b, save_every, out_dir=
                                 overlapVar = False
                 
                 # check if ellipse rotation would cause boundary overlap
-                elif (testX ** 2 + testY ** 2) > ((l - b) ** 2):
+                elif (testX ** 2 + testY ** 2) > ((R - b) ** 2):
                     
                     # ellipse can't be within one short axis-length of boundary
-                    if (testX ** 2 + testY ** 2) > ((l - a) ** 2):
+                    if (testX ** 2 + testY ** 2) > ((R - a) ** 2):
                         overlapVar = True
                         
                     # check for overlap with outer boundary
-                    elif (HardBoundaryCircle_Disc(l, a, b, testX, testY, testT) == True):
+                    elif (HardBoundaryCircle_Disc(R, a, b, testX, testY, testT) == True):
                         overlapVar = True
                         
                     # check for overlap with other ellipses
@@ -1175,11 +1193,11 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, l, r2, a, b, save_every, out_dir=
                 else:
                     
                     # center of mass position can't be within one short axis length of inner boundary
-                    if (testX ** 2 + testY ** 2) < ((r2 + a) ** 2):
+                    if (testX ** 2 + testY ** 2) < ((r + a) ** 2):
                         overlapVar = True
                         
                     # check for overlap with inner boundary
-                    elif (HardBoundaryCircle_Disc(r2 * 1.02, a, b, testX, testY, testT) == True):
+                    elif (HardBoundaryCircle_Disc(r * 1.02, a, b, testX, testY, testT) == True):
                         overlapVar = True
                         
                     # check for overlap with other ellipses
@@ -1240,41 +1258,41 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, l, r2, a, b, save_every, out_dir=
         if plotCount == (save_every):
             plotCount = 0
 
-            fileNameArray = 'PosArray.csv'
+            fileNameArray = 'step_.csv'
             new_fileName = fileNameArray.split(".csv")[0] + str(u) + ".csv"
-            complete_name = os.path.join(folder_name, new_fileName)
+            complete_name = os.path.join(main_folder_name, new_fileName)
             np.savetxt(complete_name, PosArray, delimiter=',')
             
             print("Monte Carlo step [{}/{}], Monte Carlo move [{}/{}]: plotted snapshot".format(u, steps, w, n))
+   
+    final_array_name = 'step_'+str(steps)+'.csv'
+    complete_name = os.path.join(main_folder_name, final_array_name)
+    np.savetxt(complete_name, PosArray, delimiter=',')
     
     # area fraction for simulation
-    area_fraction = n * a * b / (l ** 2 - r2 ** 2)
+    area_fraction = n * a * b / (R ** 2 - r ** 2)
 
     print(f"Total number of accepted moves: {accepted_moves}")
     print(f"Total number of moves: {moves}")
     print(f"Acceptance rate: {accepted_moves / moves}")
     
     # write simulation parameters to a text file
-    complete_name = os.path.join(folder_name, file_name)
-    text_file = open(complete_name, 'w+')
-    text_file.write("Parameters" + "\r\n")
-    text_file.write("- - - - -" + "\r\n")
-    text_file.write("Monte Carlo steps: " + str(steps) + "\r\n")
-    text_file.write("R: " + str(l) + "\r\n")
-    text_file.write("r: " + str(r2) + "\r\n")
-    text_file.write("d_pos / step size: " + str(d_pos) + "\r\n")
-    text_file.write("d_ang / step size: " + str(d_ang) + "\r\n")
-    text_file.write("# of Ellipse: " + str(n) + "\r\n")
-    text_file.write("reduced density: " + str(area_fraction) + "\r\n")
-    text_file.write("Semi Minor Axis: " + str(a) + "\r\n")
-    text_file.write("Semi Major Axis: " + str(b) + "\r\n")
-    text_file.write("Accepted Moves: " + str(accepted_moves) + "\r\n")
-    text_file.write("Total Moves: " + str(moves) + "\r\n")
-    text_file.write("Acceptance Rate: " + str(100 * (accepted_moves / moves)) + " %" + "\r\n")
-    text_file.close()
-    fileNameArray = 'FinalPosArray.csv'
-    complete_name = os.path.join(folder_name, fileNameArray)
-    np.savetxt(complete_name, PosArray, delimiter=',')
+    file_name = "MonteCarlo_Annulus_SimNotes.txt"
+    with open(os.path.join(main_folder_name, file_name), 'w+') as text_file:
+        text_file.write("Parameters" + "\r\n")
+        text_file.write("- - - - -" + "\r\n")
+        text_file.write("Monte Carlo steps: " + str(steps) + "\r\n")
+        text_file.write("R: " + str(R) + "\r\n")
+        text_file.write("r: " + str(r) + "\r\n")
+        text_file.write("d_pos / step size: " + str(d_pos) + "\r\n")
+        text_file.write("d_ang / step size: " + str(d_ang) + "\r\n")
+        text_file.write("# of Ellipse: " + str(n) + "\r\n")
+        text_file.write("reduced density: " + str(area_fraction) + "\r\n")
+        text_file.write("Semi Minor Axis: " + str(a) + "\r\n")
+        text_file.write("Semi Major Axis: " + str(b) + "\r\n")
+        text_file.write("Accepted Moves: " + str(accepted_moves) + "\r\n")
+        text_file.write("Total Moves: " + str(moves) + "\r\n")
+        text_file.write("Acceptance Rate: " + str(100 * (accepted_moves / moves)) + " %" + "\r\n")
     
     
 if __name__ == "__main__":
@@ -1282,17 +1300,22 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a Monte Carlo simulation of liquid crystals")
     parser.add_argument("-N", type=int, help="Number of particles to simulate")
     parser.add_argument("--outer_radius", type=float, help="Radius of outer boundary")
+    parser.add_argument("--outer_increment", type=float, help="Increment to outer boundary")
     parser.add_argument("--inner_radius", type=float, help="Radius of inner boundary")
+    parser.add_argument("--long_axis", type=float, help="Semi-major axis of ellipse")
+    parser.add_argument("--short_axis", type=float, help="Semi-minor axis of ellipse")
     parser.add_argument("--steps", type=int, help="Number of steps to run simulation for")
     parser.add_argument("--confinement", choices=["Circle", "Annulus"], help="Type of confinement to simulate")
     parser.add_argument("--res-path", help="Path to store results at")
     parser.add_argument("--pos_array_path", help="Path of input positions array")
+    parser.add_argument("--checkpoint_file", type=int, help="checkpoint file to use")
+    parser.add_argument("--save_every", type=int, help="Number of every MC steps to save system state")
     
     args = parser.parse_args()
     
     # minor and major axes respectively
-    a = 0.25
-    b = 5
+    a = args.short_axis
+    b = args.long_axis
     
     step_xy = 0.5 * args.inner_radius
     step_th = np.pi / 2
@@ -1300,23 +1323,32 @@ if __name__ == "__main__":
     dely = 0  # % of a
     delx = 0  # % of a
     
+    import time
+    start = time.perf_counter()
+    
     # circle monte carlo
     if args.confinement == "Circle":
         
-        if args.pos_array_path is not None:
-            initial_state = []
-        
+        if args.checkpoint_file:
+            initial_state = init_Circ_H_GrC(args.N, a, b, args.outer_radius, dely, delx)[0]
+            print("Restarting simulation from checkpoint")
+            
         else:
             initial_state = init_Circ_H_GrC(args.N, a, b, args.outer_radius, dely, delx)[0]
+            print(f"Time for circle boundary state initialization for N={args.N}: {time.perf_counter()-start} seconds.")
             
-        MC_Circ_Hard(initial_state, step_xy, step_th, args.steps, args.N, args.outer_radius, a, b, out_dir=args.res_path)
+        MC_Circ_Hard(initial_state, step_xy, step_th, args.steps, args.N, args.outer_radius+args.outer_increment,
+                     a, b, save_every=args.save_every, out_dir=args.res_path)
     
     # annulus monte carlo
     elif args.confinement == "Annulus":
         
-        initial_state = init_Ann_H_GrC(args.N, a, b, args.outer_radius, args.inner_radius + .25, dely, delx)[0]
-        MC_Ann_Hard(initial_state, step_xy, step_th,
-                    args.steps, args.outer_radius, args.inner_radius, a, b, out_dir=args.res_path)
+        initial_state = init_Ann_H_GrC(args.N, a, b, args.outer_radius, args.inner_radius, dely, delx)[0]
+        print(f"Time for annular boundary state initialization for N={args.N}: {time.perf_counter()-start} seconds")
+        MC_Ann_Hard(initial_state, step_xy, step_th, args.steps, args.outer_radius, args.inner_radius,
+                    a, b, save_every=args.save_every, out_dir=args.res_path)
     
     else:
         raise NotImplementedError("Confinement type not supported") 
+    
+    print(f"Simulation execution time: {time.perf_counter() - start} seconds")

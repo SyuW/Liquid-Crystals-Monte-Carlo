@@ -7,7 +7,7 @@ from matplotlib.collections import PatchCollection
 from matplotlib import cm
 
 from joblib import Parallel, delayed
-
+    
 
 def PlotterAnnulus(array, a, b, L, r2, Mode, fileName):
     finalC = len(array)
@@ -1137,7 +1137,7 @@ def NewPlotFile(location, R, r2, a, b, rDiv, angDiv, OP):
 
     print('Images plotted #########')
 
+    
+if __name__ == "__main__":
 
-testLoc = f'C:\\Users\\Mohamad\OneDrive - University of Waterloo\\Phase Diagram_packing_vs_r\\b=5\\r=8\\annulus_R25_r8_n_220_k_20.0_HardBC\\instanceRun'
-
-NewPlotFile(testLoc, 25, 8, 0.25, 5, 5, 8, False)
+    NewPlotFile(testLoc, 25, 8, 0.25, 5, 5, 8, False)

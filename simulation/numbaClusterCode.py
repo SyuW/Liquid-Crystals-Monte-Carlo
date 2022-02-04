@@ -759,7 +759,7 @@ def init_Circ_H_GrC(n, a, b, R, d, e):
 
 
 #@jit()
-def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, R, r, a, b, save_every, out_dir=os.getcwd()):
+def MC_Ann_Hard(PosArray, out_dir, R, r, a, b, d_pos, d_ang, start_step, end_step, save_every, verbose=False):
     """
     Run Monte Carlo simulation with hard BCs for annular geometry
     
@@ -773,30 +773,13 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, R, r, a, b, save_every, out_dir=o
     :param: b - length of long axis
     :param: save_every - number of every MC steps to save snapshot
     """
-
-    moves = 0
-    accepted_moves = 0
-    numE = len(PosArray)
-    kVal = b / a
-
-    main_folder_name = os.path.join(out_dir, 'annulus_R{}_r{}_n_{}_k_{}_HardBC'.format(R, r, numE, kVal))
-    
-    # make the directory to save results at
-    if os.path.exists(main_folder_name):
-        pass
-    else:
-        os.makedirs(main_folder_name)
         
     # pickle the simulation parameters to be used by other code (e.g. plotting)
-    var_fname = os.path.join(main_folder_name, "params.pickle")
-    pickled_vars = {"b":b, "a":a, "r":r, "R":R, "total_steps":steps, "current_step":0, "save_every":save_every}
+    var_fname = os.path.join(out_dir, "params.pickle")
+    pickled_vars = {"pos_array":PosArray, "b":b, "a":a, "r":r, "R":R, "d_ang":d_ang, "d_pos":d_pos,
+                    "start_step":start_step, "end_step":end_step, "save_every":save_every}
     with open(var_fname, "wb") as f:
         pickle.dump(pickled_vars, f)
-  
-    # save the initial state
-    initial_array_name = 'step_0.csv'
-    complete_name = os.path.join(main_folder_name, initial_array_name)
-    np.savetxt(complete_name, PosArray, delimiter=',')
     
     # total number of particles
     n = len(PosArray)
@@ -808,6 +791,8 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, R, r, a, b, save_every, out_dir=o
     # counters for move adjusts and plots
     fixCount = 0
     plotCount = 0
+    moves = 0
+    accepted_moves = 0
     
     # repeat for every Monte Carlo step
     for u in range(steps):
@@ -818,6 +803,7 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, R, r, a, b, save_every, out_dir=o
             # adjust coordinate shift magnitudes
             if fixCount == (np.ceil(steps / 100)):
                 
+                # reset the fix counter
                 fixCount = 0
                 
                 d_ang_old = d_ang
@@ -861,18 +847,19 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, R, r, a, b, save_every, out_dir=o
                     d_ang = minAng
                     d_pos = minPos
                 
-                msg = (f"Monte Carlo step [{u}/{steps}], Monte Carlo move [{w}/{n}]: "
-                       f"changed move sizes: d_pos - ({d_pos_old:.4f} -> {d_pos:.4f}), "
-                       f"d_ang - ({d_ang_old:.4f} -> {d_ang:.4f})"
-                      )
-                #print(msg)
+                if verbose:
+                    msg = (f"Monte Carlo step [{u}/{steps}], Monte Carlo move [{w}/{n}]: "
+                           f"changed move sizes: d_pos - ({d_pos_old:.4f} -> {d_pos:.4f}), "
+                           f"d_ang - ({d_ang_old:.4f} -> {d_ang:.4f})"
+                          )
+                    print(msg)
             
-            # compute uniformly random coordinate shift magnitudes
+            # uniform random scaling
             x = d_pos * rd.uniform(-1, 1)
             y = d_pos * rd.uniform(-1, 1)
             t = d_ang * rd.uniform(-1, 1)
             
-            # apply coordinate shifts as a test
+            # apply proposed shifts and check for overlap
             testX = PosArray[w, 0] + x
             testY = PosArray[w, 1] + y
             testT = PosArray[w, 2] + t
@@ -1001,11 +988,10 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, R, r, a, b, save_every, out_dir=o
                 PosArray[w, 0] = testX
                 PosArray[w, 1] = testY
                 PosArray[w, 2] = testT
-
+            
+            # increment moves/fix counters
             moves += 1
             fixCount += 1
-            x = 0
-            y = 0
 
         plotCount += 1
         # periodically save data snapshots
@@ -1050,7 +1036,7 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, R, r, a, b, save_every, out_dir=o
 
 
 #@jit(cache=True)
-def MC_Circ_Hard(PosArray, out_dir, R, a, b, d_pos, d_ang, start_step, end_step, save_every):
+def MC_Circ_Hard(PosArray, out_dir, R, a, b, d_pos, d_ang, start_step, end_step, save_every, verbose=False):
     """
     Monte Carlo simulation for hard ellipses with hard circle boundary
     
@@ -1073,11 +1059,6 @@ def MC_Circ_Hard(PosArray, out_dir, R, a, b, d_pos, d_ang, start_step, end_step,
                        "start_step":start_step, "end_step":end_step, "save_every":save_every}
     with open(var_fname, "wb") as f:
         pickle.dump(checkpoint_vars, f)
-  
-    #save the initial state
-    fileNameArray = 'step_0.csv'
-    complete_name = os.path.join(out_dir, fileNameArray)
-    np.savetxt(complete_name, PosArray, delimiter=',')
     
     # total number of particles
     n = len(PosArray)
@@ -1089,13 +1070,13 @@ def MC_Circ_Hard(PosArray, out_dir, R, a, b, d_pos, d_ang, start_step, end_step,
     accepted_moves = 0
     
     # iterate over all steps
-    for u in range(start_step, end_step+1):
+    for u in range(start_step+1, end_step+1):
         
         # iterate over all particles 
         for w in range(n):
             
             # adjust the move sizes 50 times per simulation
-            if fixCount == (np.ceil(steps / 50)):
+            if fixCount == (np.ceil(end_step / 50)):
                 
                 # reset the fix counter
                 fixCount = 0
@@ -1136,11 +1117,12 @@ def MC_Circ_Hard(PosArray, out_dir, R, a, b, d_pos, d_ang, start_step, end_step,
                     d_pos = 1.8 * d_ang
                 
                 # print the adjustments at Monte Carlo step
-                msg = (f"Monte Carlo step [{u}/{steps}], Monte Carlo move [{w}/{n}]: "
-                       f"changed move sizes: d_pos - ({d_pos_old:.4f} -> {d_pos:.4f}), "
-                       f"d_ang - ({d_ang_old:.4f} -> {d_ang:.4f})"
-                      )
-                #print(msg)
+                if verbose:
+                    msg = (f"Monte Carlo chunk step [{u}/{end_step}], Monte Carlo move [{w}/{n}]: "
+                           f"changed move sizes: d_pos - ({d_pos_old:.4f} -> {d_pos:.4f}), "
+                           f"d_ang - ({d_ang_old:.4f} -> {d_ang:.4f})"
+                          )
+                    print(msg)
             
             # uniformly random scaling
             x = d_pos * rd.uniform(-1, 1)
@@ -1245,14 +1227,24 @@ def MC_Circ_Hard(PosArray, out_dir, R, a, b, d_pos, d_ang, start_step, end_step,
             # open and write to parameters file
             with open(var_fname, "rb") as f:
                 checkpoint_vars = pickle.load(f)
-            checkpoint_vars["ang_shift"] = d_ang
-            checkpoint_vars["pos_shift"] = d_pos
+            checkpoint_vars["d_ang"] = d_ang
+            checkpoint_vars["d_pos"] = d_pos
             checkpoint_vars["current_step"] = u
             checkpoint_vars["pos_array"] = PosArray
             with open(var_fname, "wb") as f:
                 pickle.dump(checkpoint_vars, f)
             
-            print("Monte Carlo step [{}/{}], Monte Carlo move [{}/{}]: plotted snapshot".format(u, steps, w, n))
+            print("Monte Carlo chunk step [{}/{}]: saved snapshot".format(u, end_step, w, n))
+            
+    # open and write to parameters file
+    with open(var_fname, "rb") as f:
+        checkpoint_vars = pickle.load(f)
+    checkpoint_vars["d_ang"] = d_ang
+    checkpoint_vars["d_pos"] = d_pos
+    checkpoint_vars["current_step"] = u
+    checkpoint_vars["pos_array"] = PosArray
+    with open(var_fname, "wb") as f:
+        pickle.dump(checkpoint_vars, f)
     
     # packing fraction
     area_fraction = n * a * b / (R ** 2)
@@ -1262,7 +1254,7 @@ def MC_Circ_Hard(PosArray, out_dir, R, a, b, d_pos, d_ang, start_step, end_step,
     print(f"Acceptance Rate: {accepted_moves / moves}")
     
     # save a snapshot of the final positions of the particles
-    fileNameArray = f'step_{steps}.csv'
+    fileNameArray = f'step_{end_step}.csv'
     complete_name = os.path.join(out_dir, fileNameArray)
     np.savetxt(complete_name, PosArray, delimiter=',')
     
@@ -1272,7 +1264,7 @@ def MC_Circ_Hard(PosArray, out_dir, R, a, b, d_pos, d_ang, start_step, end_step,
     with open(complete_name, 'w+') as text_file:
         text_file.write("Parameters" + "\r\n")
         text_file.write("- - - - -" + "\r\n")
-        text_file.write("Monte Carlo steps: " + str(steps) + "\r\n")
+        text_file.write("Monte Carlo steps: " + str(end_step) + "\r\n")
         text_file.write("R: " + str(R) + "\r\n")
         text_file.write("d_pos / step size: " + str(d_pos) + "\r\n")
         text_file.write("d_ang / step size: " + str(d_ang) + "\r\n")
@@ -1297,7 +1289,7 @@ if __name__ == "__main__":
     # dimensions and shape of the confinement geometry
     parser.add_argument("--confinement", choices=["Circle", "Annulus"], help="Type of confinement to simulate")
     parser.add_argument("--outer_radius", type=float, help="Radius of outer boundary")
-    parser.add_argument("--outer_increment", type=float, help="Increment to outer boundary")
+    parser.add_argument("--target_density", type=float, help="Target density for expansion of outer radius")
     parser.add_argument("--inner_radius", type=float, help="Radius of inner boundary")
     
     # characteristics of simulated particles
@@ -1311,9 +1303,16 @@ if __name__ == "__main__":
     
     # saving and checkpointing
     parser.add_argument("--res-path", help="Path to store results at")
-    parser.add_argument("--checkpoint", type=int, help="checkpoint file to use")
+    parser.add_argument("--checkpoint", help="checkpoint file to use")
     
     args = parser.parse_args()
+    
+    # create save directory for simulation outputs
+    out_dir = args.res_path
+    if os.path.exists(out_dir):
+        pass
+    else:
+        os.makedirs(out_dir)
     
     # load parameters from checkpoint
     if args.checkpoint is not None:
@@ -1325,10 +1324,10 @@ if __name__ == "__main__":
         b = params["b"]
         outer_radius = params["R"]
         inner_radius = params["r"]
-        start_step = params["current_step"]
-        end_step = params["total_steps"]
         step_xy = params["d_pos"]
         step_th = params["d_ang"]
+        start_step = params["current_step"]
+        end_step = start_step + args.steps
         save_every = params["save_every"]
     
     # if no checkpoint, create the initial state from scratch
@@ -1339,36 +1338,38 @@ if __name__ == "__main__":
         a = args.short_axis
         b = args.long_axis
         inner_radius = args.inner_radius
-        outer_radius = args.outer_radius
         start_step = 0
         end_step = args.steps
+        save_every = args.save_every
         step_xy = 0.5 * inner_radius
         step_th = np.pi / 2
         dely = 0  # % of a
         delx = 0  # % of a
     
         # create the initial state from scratch
-        if confinement = "Circle":
+        if args.confinement == "Circle":
             initial_state = init_Circ_H_GrC(args.N, a, b, args.outer_radius, dely, delx)[0]
             print(f"Time for circle boundary state initialization for N={args.N}: {time.perf_counter()-start} seconds.")
-        elif confinement = "Annulus":
+            
+        elif args.confinement == "Annulus":
             initial_state = init_Ann_H_GrC(args.N, a, b, args.outer_radius, args.inner_radius, dely, delx)[0]
             print(f"Time for annular boundary state initialization for N={args.N}: {time.perf_counter()-start} seconds")
+            
         else:
-            raise NotImplementedError("Confinement type not supported")
-    
-    # save directory for simulation outputs
-    out_dir = args.res_dir
-    if os.path.exists(out_dir):
-        pass
-    else:
-        os.makedirs(out_dir)
+            raise NotImplementedError("Confinement type not supported")          
+            
+        #save the initial state
+        initial_state_file = 'step_0.csv'
+        initial_save = os.path.join(out_dir, initial_state_file)
+        np.savetxt(initial_save, initial_state, delimiter=',')
+        
+        # expand radius of outer boundary to target density prior to simulation run
+        outer_radius = np.sqrt(args.N*a*b/args.target_density)
     
     # circle monte carlo
     if args.confinement == "Circle":
         
-        inc_scaling = 0.35
-        MC_Circ_Hard(initial_state, args.res_dir, R=outer_radius+args.outer_increment*inc_scaling,
+        MC_Circ_Hard(initial_state, out_dir, R=outer_radius,
                      a=a, b=b, d_pos=step_xy, d_ang=step_th,
                      start_step=start_step, end_step=end_step, save_every=save_every)
     
@@ -1379,6 +1380,6 @@ if __name__ == "__main__":
                     a, b, save_every=args.save_every, out_dir=args.res_path)
     
     else:
-        raise NotImplementedError("Confinement type not supported") 
-    
-    print(f"Simulation execution time: {time.perf_counter() - start} seconds")
+        raise NotImplementedError("Confinement type not supported")
+        
+    print(f"Simulation execution time: {time.perf_counter() - start} seconds for steps {start_step} to {end_step}")

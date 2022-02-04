@@ -4,6 +4,9 @@ import pickle
 
 import numpy as np
 
+import matplotlib
+matplotlib.use('Agg')
+
 from matplotlib.patches import Ellipse, Rectangle, Circle, Wedge
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
@@ -12,15 +15,17 @@ from matplotlib.cm import get_cmap
 from joblib import Parallel, delayed
 
 
-def iterate_over_runs(root):
+def iterate_over_runs(root, parallel=False):
     
     runs = [os.path.join(root, d) for d in os.listdir(root)]
-    Parallel(n_jobs=2)(delayed(plot_system_states)(r, color_angles=True) for r in runs)
+    
+    if parallel:
+        Parallel(n_jobs=2)(delayed(plot_system_states)(r, color_angles=True) for r in runs)
         
 
 def plot_system_states(run_dir, color_angles=False):
     
-    with open(os.path.join(run_dir, "params.pickle"), "rb") as f:
+    with open(os.path.join(run_dir, "checkpoint.pickle"), "rb") as f:
         params = pickle.load(f)
     
     a = params["a"]
@@ -75,5 +80,5 @@ if __name__ == "__main__":
     import time
    
     start = time.perf_counter()
-    iterate_over_runs(args.root_path)
+    plot_system_states(args.root_path, color_angles=True)
     print(f"Plotting execution time: {time.perf_counter() - start} seconds")

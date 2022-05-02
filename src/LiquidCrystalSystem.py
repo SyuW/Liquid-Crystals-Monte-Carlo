@@ -33,7 +33,6 @@ def get_configuration_information(path, confinement="Annulus", verbose=False):
     else:
         if verbose:
             print(f"Warning: {sim_notes_file} does not exist at {path}\n")
-            pass
 
     return params
 
@@ -96,7 +95,7 @@ class LCSystem:
             e.set_array(colors)
             e.set_clim([0, np.pi])
             cbar = fig.colorbar(e, label="Angle wrt x-axis",
-                                orientation="horizontal", pad=0.05)
+                                orientation="horizontal", ax=plt.gca(), pad=0.05)
             cbar.set_ticks([0, np.pi/2, np.pi])
             cbar.set_ticklabels(["0", r"$\pi/2$", r"$\pi$"])
 
@@ -156,6 +155,8 @@ class LCSystem:
         pos_array_paths = [os.path.join(lc_data_path, p) for p in os.listdir(lc_data_path) if p.endswith(".csv")]
         pos_array_paths = [os.path.normpath(p) for p in pos_array_paths]
 
+        self.sim_params["Monte Carlo steps"] = 2000000
+
         # get system state for each MC step
         self.snapshots = dict()
         for p in pos_array_paths:
@@ -168,7 +169,7 @@ class LCSystem:
                 MC_step_no = 0
             # intermediate step during MC sim
             else:
-                MC_step_no = int(basename.strip("PosArray").strip(".csv"))
+                MC_step_no = int(basename.strip("step_").strip(".csv"))
 
             self.snapshots[MC_step_no] = np.loadtxt(p, delimiter=",", dtype=np.float32)
 
@@ -178,12 +179,18 @@ class LCSystem:
 
 
 if __name__ == "__main__":
-    data_path = "C:\\Users\\Sam Yu\\Desktop\\School\\4A\\Phys_437A_Research_Project\\datasets\\r=0"
+    r = 2
+    data_path = f"C:\\Users\\Sam Yu\\Desktop\\School\\4A\\Phys_437A_Research_Project\\datasets\\r={r}"
 
+    system_size = 150
     # plot all snapshots for all system sizes in dataset
-    _path_ = os.listdir(data_path)[-1]
+    _path_ = [p for p in os.listdir(data_path) if f"n_{system_size}_" in p][0]
     print(_path_)
     full_path = os.path.join(data_path, _path_, "instanceRun")
-    lc = LCSystem(lc_data_path=full_path, confinement="Circle")
+
+    if r == 0:
+        lc = LCSystem(lc_data_path=full_path, confinement="Circle")
+    else:
+        lc = LCSystem(lc_data_path=full_path, confinement="Annulus")
 
     pass

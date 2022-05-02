@@ -1,55 +1,62 @@
-import math
-import os
-
-import numpy as np
-
+import pickle
+from argparse import Namespace
 from datetime import date
+from joblib import Parallel, delayed
+import math
 from multiprocessing import Pool
+import numpy as np
+import os
 
 # custom imports
 from LiquidCrystalSystem import LCSystem
 from utilities import get_feature_func, get_nearest_neighbor_func
+from visualizations import create_feature_vector_visualization
 
 
-def load_dataset(dataset_path, verbose=False):
+def retrieve_system_data(run_path):
     """
-
-    :param verbose:
-    :param dataset_path:
+    Get system data from files at path
+    :param run_path:
     :return:
     """
 
-    # hard-coded values for dimensions, move to config file later
-    R = 25
-    r = 0
-    b = 5
-    a = 0.25
-    # load a circular or annular confinement dataset
-    if r == 0:
-        confinement = "Circle"
-    else:
-        confinement = "Annulus"
-    systems = dict()
-    # iterate over datasets on path
-    for _path_ in os.listdir(dataset_path):
-        full_path = os.path.join(dataset_path, _path_, 'instanceRun')
-        # Simulation summary notes exists
-        if os.path.exists(os.path.join(full_path, f"MonteCarlo_{confinement}_SimNotes.txt")):
-            lc = LCSystem(lc_data_path=full_path, confinement=confinement)
-            num_of_particles = lc.sim_params['# of Ellipse']
-            systems[num_of_particles] = lc
-        # Simulation summary notes DNE
-        else:
-            lc = LCSystem(lc_data_path=full_path, confinement=confinement)
-            lc.sim_params["R"] = R
-            lc.sim_params["r"] = r
-            lc.sim_params["Semi Major Axis"] = b
-            lc.sim_params["Semi Minor Axis"] = a
-            num_of_particles = lc.sim_params["# of Ellipse"]
-            systems[num_of_particles] = lc
-    if verbose:
-        print(f"Found particle numbers: {sorted([int(x) for x in systems.keys()])}")
-    # return particle number: monte carlo step: positions array
+    with open(os.path.join(run_path, "checkpoint.pickle"), "rb") as in_f:
+        params = pickle.load(in_f)
+
+    _system_ = Namespace()
+    # get the main parameters for the simulation run
+    _system_.outer_radius = params["R"]
+    _system_.inner_radius = params["r"]
+    _system_.num_of_particles = len(params["pos_array"])
+    _system_.total_steps = params["end_step"]
+    _system_.minor_axis = params["a"]
+    _system_.major_axis = params["b"]
+    _system_.area_fraction = len(params["pos_array"]) * params["a"] * params["b"] / \
+                             (params["R"] ** 2 - params["r"] ** 2)
+    # get paths of all data files and retrieve system state information for each Monte Carlo step
+    pos_array_paths = [os.path.join(run_path, p) for p in os.listdir(run_path) if p.endswith(".csv")]
+    pos_array_paths = [os.path.normpath(p) for p in pos_array_paths]
+    states = dict()
+    for p in pos_array_paths:
+        basename = os.path.basename(p)
+        mc_step = int(basename.strip("step_").strip(".csv"))
+        pos_array = np.loadtxt(os.path.join(run_path, p), delimiter=",", dtype=np.float32)
+        states[mc_step] = pos_array
+    _system_.states = states
+
+    return _system_
+
+
+def load_dataset(dataset_path):
+    """
+    Load dataset from path
+    :param dataset_path: path containing all the run folders produced from simulations
+    :return:
+    """
+
+    systems = Parallel(n_jobs=4)(delayed(retrieve_system_data)(os.path.join(dataset_path, _p_))
+                                 for _p_ in os.listdir(dataset_path))
+    systems = {s.area_fraction: s for s in systems}
     return systems
 
 
@@ -57,6 +64,8 @@ def create_data_matrix(systems, num_of_features, num_of_samples, feature_func, n
                        start=1000000, end=1500000, save_path=None, verbose=False):
     """
     Construct the data matrix for PCA input
+    :param neighbor_func:
+    :param feature_func:
     :param save_path:
     :param verbose:
     :param systems:
@@ -68,28 +77,28 @@ def create_data_matrix(systems, num_of_features, num_of_samples, feature_func, n
     """
 
     data_matrix = []
-    samples = dict()
+    samples = {af: [] for af in systems.keys()}
     # for particle number
-    for particle_number in sorted(systems.keys()):
-        system_at_n = systems[particle_number]
-        system_state_at_mc_step = systems[particle_number].snapshots
+    for area_fraction in sorted(samples.keys()):
+        system_at_area_fraction = systems[area_fraction]
         # for monte carlo step, position array
-        for mc_step, pos_array in system_at_n.snapshots.items():
+        for mc_step, pos_array in system_at_area_fraction.states.items():
             # if monte carlo step of snapshot is between start and end
             if start <= mc_step <= end:
                 # get snapshot of system at Monte Carlo step
-                snapshot = system_state_at_mc_step[mc_step]
+                snapshot = system_at_area_fraction.states[mc_step]
                 # create the feature vectors
                 fvs, _ = create_feature_vectors_from_snapshot(snapshot,
                                                               num_features=num_of_features,
                                                               num_samples=num_of_samples,
                                                               feature_func=feature_func,
                                                               nn_func=neighbor_func)
+
                 # add to data matrix
                 data_matrix = data_matrix + fvs
 
                 # add to samples
-                samples[particle_number] = fvs
+                samples[area_fraction] += fvs
 
     # stack feature vecs to form matrix
     data_matrix = np.stack(data_matrix, axis=0)
@@ -97,21 +106,12 @@ def create_data_matrix(systems, num_of_features, num_of_samples, feature_func, n
     samples = {n: sample for n, sample in samples.items() if sample != []}
     # print out useful info
     if verbose:
-        print(f"Number of features used: {num_of_features}")
-        print(f"Number of samples used: {num_of_samples}")
+        print(f"Number of features used per feature vector: {num_of_features}")
+        print(f"Number of samples used per area fraction: {num_of_samples}")
         print(f"Shape of data matrix: {data_matrix.shape}")
-        for n in sorted([int(x) for x in samples.keys()]):
-            print(f"N: {n}, # of samples: {len(samples[n])}")
-        print(f"Total # of samples: {sum([len(samples[int(n)]) for n in samples.keys()])}")
-    # save all the arrays so that they can be loaded in later stages
-    if save_path:
-        save_path = os.path.join(save_path, "data")
-        os.makedirs(save_path, exist_ok=True)
-        # save the data matrix
-        np.save(os.path.join(save_path, "data.npy"), data_matrix)
-        # save the samples individually
-        for particle_number, sample in samples.items():
-            np.save(os.path.join(save_path, f"{particle_number}.npy"), np.array(sample))
+        # for n in sorted([int(x) for x in samples.keys()]):
+        #    print(f"N: {n}, # of samples: {len(samples[n])}")
+        # print(f"Total # of samples: {sum([len(samples[int(n)]) for n in samples.keys()])}")
 
     return data_matrix, samples
 
@@ -120,7 +120,7 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
                                          feature_func=get_feature_func('relative_orientation'),
                                          nn_func=get_nearest_neighbor_func('euclidean_distance')):
     """
-    Create the feature vectors from provided coordinates for all particles
+    Create the feature vectors from provided particle coordinates
 
     :param coordinates: list of (x, y, theta) coordinates
     :param num_features: number of features in each vector
@@ -129,6 +129,7 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
     :param nn_func: function for determining nearest neighbors
     :return: feature_vectors, feature_particle_coordinates
     """
+
     assert (num_features < len(coordinates)), \
         f"Number of features {num_features} cannot be greater than number of particles {len(coordinates)}"
     N = len(coordinates)
@@ -143,11 +144,11 @@ def create_feature_vectors_from_snapshot(coordinates, num_features, num_samples,
     probe_indices = rng.choice(N, size=num_samples, replace=False)
 
     # choosing probe particle using normal distribution
-    # gaussian_points = np.random.multivariate_normal((0, 0), np.identity(2)*4, num_samples)
-    # probe_indices = []
-    # for p in gaussian_points:
-    #    dists = [nn_func(c[:2], p) for c in coordinates]
-    #    probe_indices.append(np.argmin(dists))
+    gaussian_points = np.random.multivariate_normal((0, 0), np.identity(2)*4, num_samples)
+    probe_indices = []
+    for p in gaussian_points:
+        dists = [nn_func(c[:2], p) for c in coordinates]
+        probe_indices.append(np.argmin(dists))
 
     # initialize stuff
     feature_vectors = []

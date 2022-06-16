@@ -7,7 +7,6 @@ import os
 
 # custom imports
 from interactions import compute_ellipse_line_intersection as el_int
-from LiquidCrystalSystem import LCSystem
 
 
 def sample_on_annulus(num_points, r1, r2, t1=0, t2=2 * np.pi, ret_polar=False):

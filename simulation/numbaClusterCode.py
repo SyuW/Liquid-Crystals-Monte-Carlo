@@ -7,7 +7,7 @@ from operator import itemgetter
 import sys
 import math
 
-from numba import jit
+#from numba import jit
 
 
 def dist(x1, y1, x2, y2):
@@ -29,7 +29,7 @@ def atan2(x, y):
     return val
 
 
-@jit(cache=True)
+#@jit(cache=True)
 def overlap_Ellipse(x1, y1, theta1, x2, y2, theta2, a, b):
     k = b / a
     xi = (k ** 2 - 1) / (k ** 2 + 1)
@@ -63,7 +63,7 @@ def overlap_Ellipse(x1, y1, theta1, x2, y2, theta2, a, b):
     return val
 
 
-@jit(cache=True)
+#@jit(cache=True)
 def overlap_Ellipse2(x1, y1, theta1, x2, y2, theta2, a, b):
     k = b / a
     xi = (k ** 2 - 1) / (k ** 2 + 1)
@@ -92,7 +92,7 @@ def overlap_Ellipse2(x1, y1, theta1, x2, y2, theta2, a, b):
     return sigma_2D
 
 
-@jit(cache=True)
+#@jit(cache=True)
 def GeometricPotential(x1, y1, theta1, x2, y2, theta2, LongAxis1, ShortAxis1, LongAxis2, ShortAxis2):
     small = 10 ** (-14)
 
@@ -178,7 +178,7 @@ def GeometricPotential(x1, y1, theta1, x2, y2, theta2, LongAxis1, ShortAxis1, Lo
     return d
 
 
-@jit(cache=True)
+#@jit(cache=True)
 def HardBoundaryCircle_Disc(R, shortAxis, longAxis, xc, yc, theta):
     overlap = False
 
@@ -358,7 +358,7 @@ def init_Circ_H_Rd(n, l, a, b):
     return init_pos
 
 
-@jit(cache=True)
+#@jit(cache=True)
 def MC_Circ_Hard(PosArray, d_pos, d_ang, steps, n, l, a, b):
     global moves
     global accepted_moves
@@ -919,7 +919,7 @@ def init_Circ_H_GrC(n, a, b, R, d, e):
     return [posArr, redE]
 
 
-@jit()
+#@jit()
 def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, n, l, r2, a, b):
     # global moves
     # global accepted_moves
@@ -1183,10 +1183,10 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, n, l, r2, a, b):
 
 
 R = 25
-r = .5
-A = 0.25
-B = 5
-MCSteps = 2000000
+r = 0
+A = 3
+B = 3
+MCSteps = 500000
 stepXY = 0.5 * R
 stepTh = np.pi / 2
 dely = 0  # % of a
@@ -1194,8 +1194,8 @@ delx = 0  # % of a
 
 N = 225000000
 
-N = 318
+N = 200
 
-initialState = init_Ann_H_GrC(N, A, B, R, r + .25, dely, delx)[0]
+initialState = init_Circ_H_GrC(N, A, B, R, dely, delx)[0]
 
 MC_Ann_Hard(initialState, stepXY, stepTh, MCSteps, 2102003, R, r, A, B)

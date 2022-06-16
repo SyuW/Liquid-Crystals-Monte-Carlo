@@ -7,7 +7,6 @@ import numpy as np
 import os
 
 # custom imports
-from LiquidCrystalSystem import LCSystem
 from utilities import get_feature_func, get_nearest_neighbor_func
 
 

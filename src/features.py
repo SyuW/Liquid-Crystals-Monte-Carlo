@@ -8,7 +8,6 @@ import numpy as np
 import os
 
 # custom imports
-from LiquidCrystalSystem import LCSystem
 from utilities import get_feature_func, get_nearest_neighbor_func
 from visualizations import create_feature_vector_visualization
 
@@ -20,19 +19,23 @@ def retrieve_system_data(run_path):
     :return:
     """
 
-    with open(os.path.join(run_path, "checkpoint.pickle"), "rb") as in_f:
-        params = pickle.load(in_f)
-
     _system_ = Namespace()
-    # get the main parameters for the simulation run
-    _system_.outer_radius = params["R"]
-    _system_.inner_radius = params["r"]
-    _system_.num_of_particles = len(params["pos_array"])
-    _system_.total_steps = params["end_step"]
-    _system_.minor_axis = params["a"]
-    _system_.major_axis = params["b"]
-    _system_.area_fraction = len(params["pos_array"]) * params["a"] * params["b"] / \
-                             (params["R"] ** 2 - params["r"] ** 2)
+    if os.path.exists(os.path.join(run_path, "checkpoint.pickle")):
+        with open(os.path.join(run_path, "checkpoint.pickle"), "rb") as in_f:
+            params = pickle.load(in_f)
+
+            # get the main parameters for the simulation run
+            _system_.outer_radius = params["R"]
+            _system_.inner_radius = params["r"]
+            _system_.num_of_particles = len(params["pos_array"])
+            _system_.total_steps = params["end_step"]
+            _system_.minor_axis = params["a"]
+            _system_.major_axis = params["b"]
+            _system_.area_fraction = len(params["pos_array"]) * params["a"] * params["b"] / \
+                                     (params["R"] ** 2 - params["r"] ** 2)
+    else:
+        print("Parameters file not found, continuing")
+
     # get paths of all data files and retrieve system state information for each Monte Carlo step
     pos_array_paths = [os.path.join(run_path, p) for p in os.listdir(run_path) if p.endswith(".csv")]
     pos_array_paths = [os.path.normpath(p) for p in pos_array_paths]

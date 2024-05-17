@@ -133,3 +133,7 @@ dmypy.json
 
 # LiquidCrystals/data folder
 data/*
+
+# Ignore Fortran for now
+*.f90
+/fortran

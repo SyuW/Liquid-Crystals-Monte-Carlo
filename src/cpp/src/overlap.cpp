@@ -1,4 +1,6 @@
 #include "types.h"
+
+// standard library imports
 #include <cmath>
 
 bool checkOverlap(REAL x1, REAL y1, REAL x2, REAL y2, REAL theta1, REAL theta2, REAL minorAxis, REAL majorAxis)

@@ -121,7 +121,7 @@ Vector Vector::operator*(double a) const
 double Vector::dot(const Vector& v1) const
 {
     assert(m_size == v1.m_size);
-    double dot_product;
+    double dot_product {0.0};
     for (int i=0; i<m_size; ++i)
     {
         dot_product += m_data[i] * v1.m_data[i];
@@ -133,7 +133,7 @@ double Vector::dot(const Vector& v1) const
 double Vector::CalculateNorm(int p) const
 {
     double norm_val;
-    double sum = 0.0;
+    double sum {0.0};
     for (int i=0; i<m_size; ++i)
     {
         sum += pow(fabs(m_data[i]), p);

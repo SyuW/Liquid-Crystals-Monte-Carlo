@@ -8,7 +8,16 @@ int main() {
     double a {3};
     double b {1};
 
-    bool test {checkOverlap(0, 0, a + b - 3, 0, 0, PI/2, b, a)};
+    bool test {checkOverlap(-b, 0, b+0.01, 0, PI/2, PI/2, b, a, true)};
+
+    if (test)
+    {
+        std::cout << "The two ellipses overlap.\n";
+    }
+    else
+    {
+        std::cout << "The two ellipses do not overlap.\n";
+    }
 
     std::cout << test << "\n";
 

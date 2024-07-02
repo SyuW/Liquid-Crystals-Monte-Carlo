@@ -9,9 +9,6 @@ __pycache__/
 # C++ stuff
 *.exe
 
-# Vscode files
-.vscode/
-
 # Distribution / packaging
 .Python
 build/
@@ -143,3 +140,4 @@ data/*
 # Ignore Fortran for now
 *.f90
 /fortran
+/.vscode

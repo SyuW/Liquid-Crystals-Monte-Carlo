@@ -19,7 +19,7 @@ int main() {
         std::cout << "The two ellipses do not overlap.\n";
     }
 
-    bool test2 {checkBoundaryOverlapCircle(4, )};
+    bool test2 {checkBoundaryOverlapCircle(4, 1, 3, 1, 0, 0, true)};
 
     if (test2)
     {

@@ -12,24 +12,6 @@ bool checkEllipseEllipseOverlap(double x1, double y1, double x2, double y2, doub
     double f_1, f_2;
     double r_dot_u1a, r_dot_u2a, r_dot_u1b, r_dot_u2b;
     double G;
-
-    // debug information
-    if (debug)
-    {
-        std::cout << "Debug option set. Printing out variable info..\n";
-        std::cout << "-------------------" << "\n";
-        std::cout << "Inputs: \n";
-        std::cout << "x1: " << x1 << "\n";
-        std::cout << "y1: " << y1 << "\n";
-        std::cout << "x2: " << x2 << "\n";
-        std::cout << "y2: " << y2 << "\n";
-        std::cout << "theta1: " << theta1 << "\n";
-        std::cout << "theta2: " << theta2 << "\n";
-        std::cout << "minorAxis: " << minorAxis << "\n";
-        std::cout << "majorAxis: " << majorAxis << "\n";
-        std::cout << "-------------------" << "\n";
-    }
-    
     bool overlap;
     Vector u1a(2), u1b(2), u2a(2), u2b(2), rVec(2);
 
@@ -71,8 +53,19 @@ bool checkEllipseEllipseOverlap(double x1, double y1, double x2, double y2, doub
     // debug information
     if (debug)
     {
-        std::cout << "\n";
         std::cout << "-------------------" << "\n";
+        std::cout << "Debug option set. Printing out variable info..\n";
+        std::cout << "\n";
+        std::cout << "Inputs: \n";
+        std::cout << "x1: " << x1 << "\n";
+        std::cout << "y1: " << y1 << "\n";
+        std::cout << "x2: " << x2 << "\n";
+        std::cout << "y2: " << y2 << "\n";
+        std::cout << "theta1: " << theta1 << "\n";
+        std::cout << "theta2: " << theta2 << "\n";
+        std::cout << "minorAxis: " << minorAxis << "\n";
+        std::cout << "majorAxis: " << majorAxis << "\n";
+        std::cout << "\n";
         std::cout << "Outputs: " << "\n";
         std::cout << "Contact function: " << contactFunction << "\n";
         std::cout << "f_1: " << f_1 << "\n";
@@ -84,7 +77,7 @@ bool checkEllipseEllipseOverlap(double x1, double y1, double x2, double y2, doub
     return !((contactFunction > 0) && ((f_1 < 0) || (f_2 < 0)));
 }
 
-bool checkBoundaryOverlapCircle(double R, double minorAxis, double majorAxis, double xc, double yc, double theta)
+bool checkBoundaryOverlapCircle(double R, double minorAxis, double majorAxis, double xc, double yc, double theta, bool debug)
 {
     bool overlap {false};
     double cosine {cos(theta)};
@@ -125,7 +118,7 @@ bool checkBoundaryOverlapCircle(double R, double minorAxis, double majorAxis, do
 
     if (delta < 0)
         overlap = true;
-    else if (delta > 0 && (P < 0 && D_d < 0))
+    else if (delta > 0 && P < 0 && D_d < 0)
         overlap = true;
     else if (delta == 0)
     {
@@ -141,6 +134,33 @@ bool checkBoundaryOverlapCircle(double R, double minorAxis, double majorAxis, do
             overlap = false;
         else
             overlap = false;
+    }
+
+    if (debug)
+    {
+        std::cout << "-------------------" << "\n";
+        std::cout << "Debug option set. Printing out variable info..\n";
+        std::cout << "\n";
+        std::cout << "Inputs:\n";
+        std::cout << "Boundary radius: " << R << "\n";
+        std::cout << "Ellipse center x-position: " << xc << "\n";
+        std::cout << "Ellipse center y-position: " << yc << "\n";
+        std::cout << "Ellipse rotation angle: " << theta << "\n";
+        std::cout << "Major axis: " << majorAxis << "\n";
+        std::cout << "Minor axis: " << minorAxis << "\n";
+        std::cout << "\n";
+        std::cout << "Outputs:" << "\n";
+        std::cout << "A: " << A << "\n";
+        std::cout << "B: " << B << "\n";
+        std::cout << "C: " << C << "\n";
+        std::cout << "D: " << D << "\n";
+        std::cout << "E: " << E << "\n";
+        std::cout << "P: " << P << "\n";
+        std::cout << "R_d: " << R_d << "\n";
+        std::cout << "D_d: " << D_d << "\n";
+        std::cout << "delta: " << delta << "\n";
+        std::cout << "delta_0: " << delta_0 << "\n";
+        std::cout << "-------------------" << "\n";
     }
 
     return overlap;

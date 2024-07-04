@@ -107,6 +107,7 @@ Vector Vector::operator-(const Vector& v1) const
     return v;
 }
 
+// scalar multiplication
 Vector Vector::operator*(double a) const
 {
     Vector v(m_size);

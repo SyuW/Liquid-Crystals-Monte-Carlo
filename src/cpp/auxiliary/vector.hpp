@@ -1,14 +1,8 @@
 #ifndef VECTORHEADERDEF
 #define VECTORHEADERDEF
 
-#include <initializer_list>
-
 class Vector
 {
-private:
-    double* m_data {};
-    int m_size {};
-
 public:
     // constructors
     Vector(const Vector& otherVector);
@@ -30,11 +24,15 @@ public:
 
     // linear algebra
     double CalculateNorm(int p=2) const; // calculate the norm
-    double dot(const Vector& v1) const;
+    double dot(const Vector& v1) const;  // compute dot product
 
     // miscellaneous functions
     double read(int i) const; // read only version of zero-based indexing
     friend int length(const Vector& v); // declare length() as a friend function
+    
+private:
+    double* m_data {};
+    int m_size {};
 };
 
 // function prototype for length()

@@ -13,8 +13,10 @@ public:
     int getNumberOfRows() const;
     int getNumberOfColumns() const;
 
+    // printing
+    void print() const;
+
     // overloaded operators
-    // double& operator[] (int i); // zero-based indexing
     double& operator() (int i, int j); // zero-based indexing
     Matrix operator+() const; // unary + operator
     Matrix operator-() const; // unary - operator

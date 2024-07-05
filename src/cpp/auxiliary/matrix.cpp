@@ -48,6 +48,19 @@ int Matrix::getNumberOfColumns() const
     return m_num_cols;
 }
 
+// print method
+void Matrix::print() const
+{
+    for (int i = 0; i < m_num_rows; ++i)
+    {
+        for (int j = 0; j < m_num_cols; ++j)
+        {
+            std::cout << m_data[m_num_rows*i + j] << " ";
+        }
+        std::cout << "\n";
+    }
+}
+
 // zero-based indexing
 double& Matrix::operator() (int i, int j)
 {

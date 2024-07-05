@@ -145,3 +145,5 @@ data/*
 *.f90
 /fortran
 
+# Output files
+*.txt

@@ -3,7 +3,11 @@
 #include "constants.hpp"
 #include "types.hpp"
 
-int main() {
+int main() 
+{
+    Simulation lcSim;
+
+    
 
     double a {3};
     double b {1};

@@ -147,3 +147,6 @@ data/*
 
 # Output files
 *.txt
+
+# vector graphics files
+*.svg

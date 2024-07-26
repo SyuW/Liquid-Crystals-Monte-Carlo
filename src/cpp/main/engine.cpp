@@ -7,12 +7,10 @@ int main()
 {
     Simulation lcSim;
 
-    
-
     double a {3};
     double b {1};
 
-    bool test1 {checkEllipseEllipseOverlap(-b, 0, b, 0, PI/2+0.1, PI/2, b, a, true)};
+    bool test1 {checkEllipseEllipseOverlap(-b, 0, b, 0, PI/2, PI/2, b, a, true)};
 
     if (test1)
     {

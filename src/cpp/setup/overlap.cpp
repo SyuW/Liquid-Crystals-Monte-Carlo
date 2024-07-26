@@ -7,6 +7,20 @@
 // check overlap between two identical ellipses -- alternate method using Vieillard-Baron
 bool checkEllipseEllipseOverlap(double x1, double y1, double x2, double y2, double theta1, double theta2, double minorAxis, double majorAxis, bool debug)
 {
+    /*
+     * function for checking whether two ellipses overlap, using the Viellard-Baron criterion
+     * Arguments       : double x1
+     *                   double y1
+     *                   double x2
+     *                   double y2
+     *                   double theta1
+     *                   double theta2
+     *                   double minorAxis
+     *                   double majorAxis
+     *                   bool debug
+     * return Type     : bool
+     */
+
     double aspectRatio;
     double contactFunction;
     double f_1, f_2;
@@ -79,6 +93,18 @@ bool checkEllipseEllipseOverlap(double x1, double y1, double x2, double y2, doub
 
 bool checkBoundaryOverlapCircle(double R, double minorAxis, double majorAxis, double xc, double yc, double theta, bool debug)
 {
+    /*
+     * function for checking ellipse overlap with a circle - for boundary conditions of container
+     * Arguments       : double R
+     *                   double minorAxis
+     *                   double majorAxis
+     *                   double xc
+     *                   double yc
+     *                   double theta
+     *                   bool debug
+     * return Type     : bool
+     */
+
     bool overlap {false};
     double cosine {cos(theta)};
     double sine {sin(theta)};

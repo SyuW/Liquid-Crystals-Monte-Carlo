@@ -67,7 +67,10 @@ bool checkEllipseEllipseOverlap(double x1, double y1, double x2, double y2,
     f_2 = 1 + G - pow(r_dot_u2a / majorAxis, 2) - pow(r_dot_u2b / minorAxis, 2);
     contactFunction = 4 * (f_1 * f_1 - 3 * f_2) * (f_2 * f_2 - 3 * f_1) - pow(9 - f_1 * f_2, 2);
     
-    overlap = !((contactFunction > 0) && ((f_1 < 0) || (f_2 < 0)));
+    if (contactFunction < 1e-8) // very small contact function indicates ellipses are tangent
+        overlap = true;
+    else
+        overlap = !((contactFunction > 0) && ((f_1 < 0) || (f_2 < 0)));
 
     // debug information
     if (debug)
@@ -105,7 +108,7 @@ bool checkEllipseEllipseOverlap(double x1, double y1, double x2, double y2,
         std::cout << "-------------------" << "\n";
     }
     
-    return !((contactFunction > 0) && ((f_1 < 0) || (f_2 < 0)));
+    return overlap;
 }
 
 bool checkBoundaryOverlapCircle(double R, double minorAxis, double majorAxis, double xc, double yc, double theta, bool debug)

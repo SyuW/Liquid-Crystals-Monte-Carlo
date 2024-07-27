@@ -101,6 +101,7 @@ void printECTestCase(ec_TestCase test)
 }
 
 
+// feeling cute might template later
 bool runEllipseEllipseTest(ee_TestCase test)
 {
     bool result;

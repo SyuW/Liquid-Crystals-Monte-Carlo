@@ -11,50 +11,44 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
     Matrix posArray(numParticles, 3);
     double x_min, x_max;
     double y_min, y_max;
-    double current_bottom_edge_pos, current_left_edge_pos;
+    double bottom_edge_pos, left_edge_pos;
     int particle_index, numParticlesPossible;
     int xgrid_size, ygrid_size;
     bool arrayComplete {false};
 
     y_min = -sqrt(radius * radius - majorAxis * majorAxis);
-    y_max = sqrt(radius * radius - majorAxis * majorAxis);
+    y_max =  sqrt(radius * radius - majorAxis * majorAxis);
 
     ygrid_size = static_cast<int>((y_max - y_min) / (2 * minorAxis));
 
     Vector yGrid(ygrid_size);
 
     // figure out the y-positions by wrapping each ellipse in bounding box
-    current_bottom_edge_pos = y_min;
-    for (int i = 0; i < ygrid_size; ++i)
-    {
-        yGrid[i] = current_bottom_edge_pos;
-        current_bottom_edge_pos += 2 * minorAxis;
-    }
-
-    // now find the x-positions of each particle
+    bottom_edge_pos = y_min;
     particle_index = 0;
     for (int i = 0; i < ygrid_size; ++i)
     {
-        x_min = -sqrt(radius * radius - yGrid[i] * yGrid[i]);
-        x_max = sqrt(radius * radius - yGrid[i] * yGrid[i]);
-        current_left_edge_pos = x_min;
+        // find the x-positions for each particle
+        x_min = -sqrt(radius * radius - bottom_edge_pos * bottom_edge_pos);
+        x_max =  sqrt(radius * radius - bottom_edge_pos * bottom_edge_pos);
+        left_edge_pos = x_min;
         xgrid_size = static_cast<int>((x_max - x_min) / (2 * majorAxis));
 
-        // figure out the range of x positions based on current y position
         for (int j = 0; j < xgrid_size; ++j)
         {
-            posArray(particle_index, 0) = current_left_edge_pos;
-            posArray(particle_index, 1) = yGrid[i];
-            posArray(particle_index, 2) = 0.0; 
+            // bottom-left corner of bounding box is stored in posArray - we will transform later
+            posArray(particle_index, 0) = left_edge_pos;
+            posArray(particle_index, 1) = bottom_edge_pos;
+            posArray(particle_index, 2) = 0.0;
 
-            current_left_edge_pos += 2 * majorAxis;
+            left_edge_pos += 2 * majorAxis;
             particle_index += 1;
 
             if (particle_index >= numParticles)
             {
                 arrayComplete = true;
                 break;
-            } 
+            }
         }
 
         if (arrayComplete)

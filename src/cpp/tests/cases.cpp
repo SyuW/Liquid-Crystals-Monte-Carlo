@@ -21,9 +21,15 @@ struct ee_TestCase
 
 
 // ellipse-circle overlap test case
-class ec_TestCase
+struct ec_TestCase
 {
-    int a {5};
+    double R;
+    double minorAxis;
+    double majorAxis;
+    double xc;
+    double yc;
+    double theta;
+    bool answer;
 };
 
 
@@ -47,6 +53,24 @@ ee_TestCase makeEllipseEllipseTestCase(double x1, double y1, double x2, double y
 }
 
 
+ec_TestCase makeEllipseCircleTestCase(double R, double minorAxis, double majorAxis,
+                                      double xc, double yc, double theta,
+                                      bool answer)
+{
+    ec_TestCase test;
+
+    test.R = R;
+    test.minorAxis = minorAxis;
+    test.majorAxis = majorAxis;
+    test.xc = xc;
+    test.yc = yc;
+    test.theta = theta;
+    test.answer = answer;
+
+    return test;
+}
+
+
 void printEETestCase(ee_TestCase test)
 {
     std::cout << "EETestCase(";
@@ -66,7 +90,14 @@ void printEETestCase(ee_TestCase test)
 void printECTestCase(ec_TestCase test)
 {
     std::cout << "ECTestCase(";
-    std::cout << "" << test.answer << ")";
+    std::cout << "params={";
+    std::cout << test.R << ", ";
+    std::cout << test.minorAxis << ", ";
+    std::cout << test.majorAxis << ", ";
+    std::cout << test.xc << ", ";
+    std::cout << test.yc << ", ";
+    std::cout << test.theta << ", ";
+    std::cout << "Answer=" << test.answer << ")";
 }
 
 
@@ -87,9 +118,26 @@ bool runEllipseEllipseTest(ee_TestCase test)
 }
 
 
+bool runEllipseCircleTest(ec_TestCase test)
+{
+    bool result;
+    result = checkBoundaryOverlapCircle(test.R, test.minorAxis, test.majorAxis,
+                                        test.xc, test.yc, test.theta);
+    if (result == test.answer)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
 int main()
 {
     std::vector<ee_TestCase> ellipseEllipseTests;
+    std::vector<ec_TestCase> ellipseCircleTests;
 
     // ellipse-ellipse overlap tests
 
@@ -115,8 +163,23 @@ int main()
             std::cout << ", failed.\n";
     }
 
-
-
     // ellipse-circle overlap tests
+    ellipseCircleTests.push_back(makeEllipseCircleTestCase(4, 1, 3, 1, 1, 7, true));
+    ellipseCircleTests.push_back(makeEllipseCircleTestCase(6.6, 1, 3, 4, 1, 4, true));
+    ellipseCircleTests.push_back(makeEllipseCircleTestCase(3.5, 1, 3, 0, 0, 0, false));
+    ellipseCircleTests.push_back(makeEllipseCircleTestCase(3.5, 1, 3, 0.5, 0, 0.8, false));
+    ellipseCircleTests.push_back(makeEllipseCircleTestCase(3.5, 1, 3, 0.6, 0, 0, true));
+
+    for (const auto& ectest: ellipseCircleTests)
+    {
+        testOutcome = runEllipseCircleTest(ectest);
+        std::cout << "Running: ";
+        printECTestCase(ectest);
+
+        if (testOutcome)
+            std::cout << ", passed.\n";
+        else
+            std::cout << ", failed.\n";
+    }
 
 }

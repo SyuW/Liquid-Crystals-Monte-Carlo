@@ -111,7 +111,8 @@ bool checkEllipseEllipseOverlap(double x1, double y1, double x2, double y2,
     return overlap;
 }
 
-bool checkBoundaryOverlapCircle(double R, double minorAxis, double majorAxis, double xc, double yc, double theta, bool debug)
+bool checkBoundaryOverlapCircle(double R, double minorAxis, double majorAxis,
+                                double xc, double yc, double theta, bool debug=false)
 {
     /*
      * function for checking ellipse overlap with a circle - for boundary conditions of container

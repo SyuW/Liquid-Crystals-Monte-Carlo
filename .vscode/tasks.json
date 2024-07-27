@@ -26,6 +26,35 @@
             ],
             "group": "build",
             "detail": "compiler: C:\\msys64\\ucrt64\\bin\\g++.exe"
+        },
+        {
+            "type": "cppbuild",
+            "label": "Debug positions initializer",
+            "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "-pedantic-errors",
+                "-Wall",
+                "-Weffc++",
+                "-Wextra",
+                "-Wsign-conversion",
+                "-std=c++20",
+                "C:\\Users\\yusiy\\GitHub\\LiquidCrystals\\src\\cpp\\utils\\initial.cpp",
+                "C:\\Users\\yusiy\\GitHub\\LiquidCrystals\\src\\cpp\\auxiliary\\matrix.cpp",
+                "C:\\Users\\yusiy\\GitHub\\LiquidCrystals\\src\\cpp\\auxiliary\\vector.cpp",
+                "C:\\Users\\yusiy\\GitHub\\LiquidCrystals\\src\\cpp\\auxiliary\\random.cpp",
+                "-o",
+                "$C:\\Users\\yusiy\\GitHub\\LiquidCrystals\\src\\cpp\\initial.exe"
+            ],
+            "options": {
+                "cwd": "C:\\msys64\\ucrt64\\bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "compiler: C:\\msys64\\ucrt64\\bin\\g++.exe"
         }
     ]
 }

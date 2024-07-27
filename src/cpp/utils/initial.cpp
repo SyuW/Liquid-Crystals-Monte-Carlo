@@ -12,7 +12,7 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
     double x_min, x_max;
     double y_min, y_max;
     double bottom_edge_pos, left_edge_pos;
-    int particle_index, numParticlesPossible;
+    int particle_index;
     int xgrid_size, ygrid_size;
     bool arrayComplete {false};
 
@@ -20,8 +20,6 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
     y_max =  sqrt(radius * radius - majorAxis * majorAxis);
 
     ygrid_size = static_cast<int>((y_max - y_min) / (2 * minorAxis));
-
-    Vector yGrid(ygrid_size);
 
     // figure out the y-positions by wrapping each ellipse in bounding box
     bottom_edge_pos = y_min;
@@ -36,10 +34,16 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
 
         for (int j = 0; j < xgrid_size; ++j)
         {
-            // bottom-left corner of bounding box is stored in posArray - we will transform later
-            posArray(particle_index, 0) = left_edge_pos;
-            posArray(particle_index, 1) = bottom_edge_pos;
-            posArray(particle_index, 2) = 0.0;
+            // transform from bottom-left corner of bounding box to ellipse center
+            // posArray(particle_index, 0) = left_edge_pos + majorAxis;
+            // posArray(particle_index, 1) = bottom_edge_pos + minorAxis;
+            // posArray(particle_index, 2) = 0;
+
+            // std::cout << "------------------------\n";
+            // posArray.print();
+            // std::cout << "------------------------\n";
+
+            std::cout << "(x,y)=" << "(" << left_edge_pos + majorAxis << ", " << bottom_edge_pos + minorAxis << ")\n";
 
             left_edge_pos += 2 * majorAxis;
             particle_index += 1;
@@ -55,28 +59,23 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
         {
             break;
         }
-    }
 
-    // transform to ellipse centers
-    for (int i = 0; i < numParticles; ++i)
-    {
-        posArray(i, 0) += majorAxis;
-        posArray(i, 1) += minorAxis; 
+        bottom_edge_pos += 2 * minorAxis;
     }
-
-    posArray.print();
 
     return posArray;
 }
 
 int main()
 {
-    int numParticlesToSimulate {7};
+    int numParticlesToSimulate {60};
     double majorAxis {3};
     double minorAxis {1};
     double boundaryRadius {25};
 
     Matrix initialPositions { initializePositionsCircle(numParticlesToSimulate, majorAxis, minorAxis, boundaryRadius) };
+    // initialPositions.print();
+
     std::ofstream outFile { "initialPositions.txt" };
 
     if (!outFile)

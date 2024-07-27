@@ -73,6 +73,12 @@ void Matrix::print() const
     }
 }
 
+// 
+void Matrix::setsize(int m, int n)
+{
+    
+}
+
 // zero-based indexing
 double& Matrix::operator() (int i, int j)
 {

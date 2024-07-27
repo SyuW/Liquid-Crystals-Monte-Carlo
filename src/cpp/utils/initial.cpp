@@ -13,43 +13,61 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
     double x_min, x_max;
     double y_min, y_max;
     double bottom_edge_pos, left_edge_pos;
-    int particle_index;
+    int particleIndex;
     int xgrid_size, ygrid_size;
     bool arrayComplete {false};
 
     y_min = -sqrt(radius * radius - majorAxis * majorAxis);
-    y_max =  sqrt(radius * radius - majorAxis * majorAxis);
+    y_max = 0;
 
-    ygrid_size = static_cast<int>((y_max - y_min) / (2 * minorAxis));
+    // ygrid_size = static_cast<int>((y_max - y_min) / (2 * minorAxis));
 
     // figure out the y-positions by wrapping each ellipse in bounding box
     bottom_edge_pos = y_min;
-    particle_index = 0;
-    for (int i = 0; i < ygrid_size; ++i)
+    particleIndex = 0;
+    while (bottom_edge_pos < y_max)
     {
         // find the x-positions for each particle
         x_min = -sqrt(radius * radius - bottom_edge_pos * bottom_edge_pos);
         x_max =  sqrt(radius * radius - bottom_edge_pos * bottom_edge_pos);
+
         left_edge_pos = x_min;
         xgrid_size = static_cast<int>((x_max - x_min) / (2 * majorAxis));
 
+        std::cout << bottom_edge_pos << "\n";
+
         for (int j = 0; j < xgrid_size; ++j)
         {
-            // transform from bottom-left corner of bounding box to ellipse center
-            posArray(particle_index, 0) = left_edge_pos + majorAxis;
-            posArray(particle_index, 1) = bottom_edge_pos + minorAxis;
-            posArray(particle_index, 2) = 0;
 
-            std::cout << "(x,y)=" << "(" << left_edge_pos + majorAxis << ", " << bottom_edge_pos + minorAxis << ")\n";
-
-            left_edge_pos += 2 * majorAxis;
-            particle_index += 1;
-
-            if (particle_index >= numParticles)
+            if (particleIndex >= numParticles)
             {
                 arrayComplete = true;
                 break;
             }
+            else
+            {
+                // transform from bottom-left corner of bounding box to ellipse center
+                posArray(particleIndex, 0) = left_edge_pos + majorAxis;
+                posArray(particleIndex, 1) = bottom_edge_pos + minorAxis;
+                posArray(particleIndex, 2) = 0;
+                particleIndex += 1;
+            }
+
+            if (particleIndex >= numParticles)
+            {
+                arrayComplete = true;
+                break;
+            }
+            else
+            {
+                // transform from bottom-left corner of bounding box to ellipse center
+                posArray(particleIndex, 0) = left_edge_pos + majorAxis;
+                posArray(particleIndex, 1) = -(bottom_edge_pos + minorAxis);
+                posArray(particleIndex, 2) = 0;
+                particleIndex += 1;
+            }
+
+            left_edge_pos += 2 * majorAxis;
         }
 
         if (arrayComplete)
@@ -65,8 +83,8 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
 
 int main()
 {
-    int numParticlesToSimulate {120};
-    double majorAxis {3};
+    int numParticlesToSimulate {9};
+    double majorAxis {7};
     double minorAxis {1};
     double boundaryRadius {25};
 
@@ -81,7 +99,7 @@ int main()
         return 1;
     }
 
-    outFile << 
+    outFile << "# x y theta\n";
 
     for (int particleIndex=0; particleIndex < numParticlesToSimulate; ++particleIndex)
     {

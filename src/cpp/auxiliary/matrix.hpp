@@ -16,6 +16,7 @@ public:
 
     // printing
     void print() const;
+    void setsize(int m, int n);
 
     // overloaded operators
     double& operator() (int i, int j); // zero-based indexing

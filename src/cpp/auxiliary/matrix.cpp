@@ -9,7 +9,7 @@ Matrix::Matrix(const Matrix& otherMatrix)
     m_num_rows = otherMatrix.getNumberOfRows();
     m_num_cols = otherMatrix.getNumberOfColumns();
     m_num_elts = m_num_rows * m_num_cols;
-    m_data = new double [m_num_elts];
+    m_data = new (std::nothrow) double [m_num_elts];
     for (int i=0; i<m_num_elts; ++i)
     {
         m_data[i] = otherMatrix.m_data[i];
@@ -23,7 +23,13 @@ Matrix::Matrix(int numRows, int numCols)
     m_num_rows = numRows;
     m_num_cols = numCols;
     m_num_elts = m_num_rows * m_num_cols;
-    m_data = new double [m_num_elts];
+    m_data = new (std::nothrow) double [m_num_elts];
+
+    if (!m_data)
+    {
+        std::cerr << "Could not allocate new memory\n";
+    }
+
     for (int i=0; i<m_num_elts; ++i)
     {
         m_data[i] = 0.0;
@@ -48,6 +54,12 @@ int Matrix::getNumberOfColumns() const
     return m_num_cols;
 }
 
+// accessor for number of elements
+int Matrix::getNumberOfElements() const
+{
+    return m_num_elts;
+}
+
 // print method
 void Matrix::print() const
 {
@@ -55,7 +67,7 @@ void Matrix::print() const
     {
         for (int j = 0; j < m_num_cols; ++j)
         {
-            std::cout << m_data[m_num_rows*i + j] << " ";
+            std::cout << m_data[m_num_cols*i + j] << " ";
         }
         std::cout << "\n";
     }
@@ -67,7 +79,15 @@ double& Matrix::operator() (int i, int j)
     assert(i >= 0 && i < m_num_rows);
     assert(j >= 0 && j < m_num_cols);
 
-    return m_data[m_num_rows*i + j];
+    return m_data[m_num_cols*i + j];
+}
+
+// zero-based indexing with flattened index
+double& Matrix::operator[] (int i)
+{
+    assert(i >= 0 && i < m_num_elts);
+
+    return m_data[i];
 }
 
 // unary identity

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cmath>
 #include <cassert>
+#include <vector>
 
 
 Matrix initializePositionsCircle(int numParticles, double majorAxis, double minorAxis, double radius)
@@ -35,13 +36,9 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
         for (int j = 0; j < xgrid_size; ++j)
         {
             // transform from bottom-left corner of bounding box to ellipse center
-            // posArray(particle_index, 0) = left_edge_pos + majorAxis;
-            // posArray(particle_index, 1) = bottom_edge_pos + minorAxis;
-            // posArray(particle_index, 2) = 0;
-
-            // std::cout << "------------------------\n";
-            // posArray.print();
-            // std::cout << "------------------------\n";
+            posArray(particle_index, 0) = left_edge_pos + majorAxis;
+            posArray(particle_index, 1) = bottom_edge_pos + minorAxis;
+            posArray(particle_index, 2) = 0;
 
             std::cout << "(x,y)=" << "(" << left_edge_pos + majorAxis << ", " << bottom_edge_pos + minorAxis << ")\n";
 
@@ -68,13 +65,12 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
 
 int main()
 {
-    int numParticlesToSimulate {60};
+    int numParticlesToSimulate {120};
     double majorAxis {3};
     double minorAxis {1};
     double boundaryRadius {25};
 
     Matrix initialPositions { initializePositionsCircle(numParticlesToSimulate, majorAxis, minorAxis, boundaryRadius) };
-    // initialPositions.print();
 
     std::ofstream outFile { "initialPositions.txt" };
 
@@ -85,14 +81,18 @@ int main()
         return 1;
     }
 
+    outFile << 
+
     for (int particleIndex=0; particleIndex < numParticlesToSimulate; ++particleIndex)
     {
         outFile << initialPositions(particleIndex, 0) 
-                << " " 
+                << "," 
                 << initialPositions(particleIndex, 1) 
-                << " " 
+                << "," 
                 << initialPositions(particleIndex, 2) << "\n";
     }
+
+    outFile.close();
 
     return 0;
 }

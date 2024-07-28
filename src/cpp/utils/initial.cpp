@@ -23,8 +23,6 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
     y_min = -sqrt(radius * radius - majorAxis * majorAxis);
     y_max =  sqrt(radius * radius - majorAxis * majorAxis) - 2 * minorAxis;
 
-    // ygrid_size = static_cast<int>((y_max - y_min) / (2 * minorAxis));
-
     // figure out the y-positions by wrapping each ellipse in bounding box
     bottom_edge_pos = y_min;
     particleIndex = 0;
@@ -62,13 +60,9 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
         }
 
         if (arrayComplete)
-        {
             break;
-        }
         else
-        {
             bottom_edge_pos += 2 * minorAxis;
-        }
     }
 
     if (!arrayComplete)
@@ -89,50 +83,4 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
     }
 
     return posArray;
-}
-
-int main()
-{
-    int numParticlesToSimulate {200};
-    double majorAxis {3};
-    double minorAxis {1};
-    double boundaryRadius {25};
-
-    std::cout << "How big do you want to make the radius of the circle boundary?\n";
-    std::cin >> boundaryRadius;
-
-    std::cout << "What is the semi-major axis of the ellipse particle?\n";
-    std::cin >> majorAxis;
-
-    std::cout << "What is the semi-minor axis of the ellipse particle?\n";
-    std::cin >> minorAxis;
-
-    std::cout << "How many particles do you want to simulate?\n";
-    std::cin >> numParticlesToSimulate;
-
-    Matrix initialPositions { initializePositionsCircle(numParticlesToSimulate, majorAxis, minorAxis, boundaryRadius) };
-
-    std::ofstream outFile { "initialPositions.txt" };
-
-    if (!outFile)
-    {
-        // Print an error and exit
-        std::cerr << "Could not open initialPositions.txt for writing.\n";
-        return 1;
-    }
-
-    outFile << "# x y theta\n";
-
-    for (int particleIndex=0; particleIndex < initialPositions.getNumberOfRows(); ++particleIndex)
-    {
-        outFile << initialPositions(particleIndex, 0) 
-                << "," 
-                << initialPositions(particleIndex, 1) 
-                << "," 
-                << initialPositions(particleIndex, 2) << "\n";
-    }
-
-    outFile.close();
-
-    return 0;
 }

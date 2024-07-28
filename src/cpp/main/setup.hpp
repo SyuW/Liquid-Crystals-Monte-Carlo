@@ -27,3 +27,5 @@ Simulation::~Simulation(void)
 }
 
 #include "../setup/overlap.cpp"
+#include "../setup/input.cpp"
+#include "../utils/initial.cpp"

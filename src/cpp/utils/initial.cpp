@@ -98,6 +98,18 @@ int main()
     double minorAxis {1};
     double boundaryRadius {25};
 
+    std::cout << "How big do you want to make the radius of the circle boundary?\n";
+    std::cin >> boundaryRadius;
+
+    std::cout << "What is the semi-major axis of the ellipse particle?\n";
+    std::cin >> majorAxis;
+
+    std::cout << "What is the semi-minor axis of the ellipse particle?\n";
+    std::cin >> minorAxis;
+
+    std::cout << "How many particles do you want to simulate?\n";
+    std::cin >> numParticlesToSimulate;
+
     Matrix initialPositions { initializePositionsCircle(numParticlesToSimulate, majorAxis, minorAxis, boundaryRadius) };
 
     std::ofstream outFile { "initialPositions.txt" };

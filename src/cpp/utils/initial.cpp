@@ -8,17 +8,20 @@
 
 
 Matrix initializePositionsCircle(int numParticles, double majorAxis, double minorAxis, double radius)
+/*
+*/
 {
     Matrix posArray(numParticles, 3);
     double x_min, x_max;
     double y_min, y_max;
     double bottom_edge_pos, left_edge_pos;
+    double intersect;
     int particleIndex;
     int xgrid_size, ygrid_size;
     bool arrayComplete {false};
 
     y_min = -sqrt(radius * radius - majorAxis * majorAxis);
-    y_max = 0;
+    y_max =  sqrt(radius * radius - majorAxis * majorAxis) - 2 * minorAxis;
 
     // ygrid_size = static_cast<int>((y_max - y_min) / (2 * minorAxis));
 
@@ -28,44 +31,34 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
     while (bottom_edge_pos < y_max)
     {
         // find the x-positions for each particle
-        x_min = -sqrt(radius * radius - bottom_edge_pos * bottom_edge_pos);
-        x_max =  sqrt(radius * radius - bottom_edge_pos * bottom_edge_pos);
+        if (bottom_edge_pos < 0)
+            intersect = bottom_edge_pos;
+        else
+            intersect = bottom_edge_pos + 2 * minorAxis;
+
+        x_min = -sqrt(radius * radius - intersect * intersect);
+        x_max =  sqrt(radius * radius - intersect * intersect);
 
         left_edge_pos = x_min;
         xgrid_size = static_cast<int>((x_max - x_min) / (2 * majorAxis));
 
         for (int j = 0; j < xgrid_size; ++j)
         {
+            posArray(particleIndex, 0) = left_edge_pos + majorAxis;
+            posArray(particleIndex, 1) = bottom_edge_pos + minorAxis;
+            posArray(particleIndex, 2) = 0;
+            particleIndex += 1;
 
             if (particleIndex >= numParticles)
             {
                 arrayComplete = true;
                 break;
             }
+            // else, find position of next particle at same y-coord
             else
             {
-                // transform from bottom-left corner of bounding box to ellipse center
-                posArray(particleIndex, 0) = left_edge_pos + majorAxis;
-                posArray(particleIndex, 1) = bottom_edge_pos + minorAxis;
-                posArray(particleIndex, 2) = 0;
-                particleIndex += 1;
+                left_edge_pos += 2 * majorAxis;
             }
-
-            if (particleIndex >= numParticles)
-            {
-                arrayComplete = true;
-                break;
-            }
-            else
-            {
-                // by symmetry, can reflect start position about x-axis to get equally valid start
-                posArray(particleIndex, 0) = left_edge_pos + majorAxis;
-                posArray(particleIndex, 1) = -(bottom_edge_pos + minorAxis);
-                posArray(particleIndex, 2) = 0;
-                particleIndex += 1;
-            }
-
-            left_edge_pos += 2 * majorAxis;
         }
 
         if (arrayComplete)
@@ -100,9 +93,9 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
 
 int main()
 {
-    int numParticlesToSimulate {100};
+    int numParticlesToSimulate {200};
     double majorAxis {3};
-    double minorAxis {3};
+    double minorAxis {1};
     double boundaryRadius {25};
 
     Matrix initialPositions { initializePositionsCircle(numParticlesToSimulate, majorAxis, minorAxis, boundaryRadius) };

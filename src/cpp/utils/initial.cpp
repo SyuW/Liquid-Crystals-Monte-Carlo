@@ -34,8 +34,6 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
         left_edge_pos = x_min;
         xgrid_size = static_cast<int>((x_max - x_min) / (2 * majorAxis));
 
-        std::cout << bottom_edge_pos << "\n";
-
         for (int j = 0; j < xgrid_size; ++j)
         {
 
@@ -60,7 +58,7 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
             }
             else
             {
-                // transform from bottom-left corner of bounding box to ellipse center
+                // by symmetry, can reflect start position about x-axis to get equally valid start
                 posArray(particleIndex, 0) = left_edge_pos + majorAxis;
                 posArray(particleIndex, 1) = -(bottom_edge_pos + minorAxis);
                 posArray(particleIndex, 2) = 0;
@@ -74,8 +72,27 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
         {
             break;
         }
+        else
+        {
+            bottom_edge_pos += 2 * minorAxis;
+        }
+    }
 
-        bottom_edge_pos += 2 * minorAxis;
+    if (!arrayComplete)
+    {
+        std::cout << "Number of particles in requested initial config exceeds capacity of container,"
+                  << "returning resized positions array with " << particleIndex+1 << " particles." << "\n";
+
+        // return resized position array
+        Matrix resized(particleIndex, 3);
+        for (int i=0; i < particleIndex; ++i)
+        {
+            resized(i, 0) = posArray(i, 0);
+            resized(i, 1) = posArray(i, 1);
+            resized(i, 2) = posArray(i, 2);
+        }
+
+        return resized;
     }
 
     return posArray;
@@ -83,9 +100,9 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
 
 int main()
 {
-    int numParticlesToSimulate {9};
-    double majorAxis {7};
-    double minorAxis {1};
+    int numParticlesToSimulate {100};
+    double majorAxis {3};
+    double minorAxis {3};
     double boundaryRadius {25};
 
     Matrix initialPositions { initializePositionsCircle(numParticlesToSimulate, majorAxis, minorAxis, boundaryRadius) };
@@ -101,7 +118,7 @@ int main()
 
     outFile << "# x y theta\n";
 
-    for (int particleIndex=0; particleIndex < numParticlesToSimulate; ++particleIndex)
+    for (int particleIndex=0; particleIndex < initialPositions.getNumberOfRows(); ++particleIndex)
     {
         outFile << initialPositions(particleIndex, 0) 
                 << "," 

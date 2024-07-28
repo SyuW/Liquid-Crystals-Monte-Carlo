@@ -6,9 +6,9 @@
 #include <string>
 
 // check overlap between two identical ellipses -- alternate method using Vieillard-Baron
-bool checkEllipseEllipseOverlap(double x1, double y1, double x2, double y2, 
-                                double theta1, double theta2, 
-                                double minorAxis, double majorAxis, bool debug=false)
+const bool checkEllipseEllipseOverlap(const double x1, const double y1, const double x2, const double y2, 
+                                      const double theta1, const double theta2,
+                                      const double minorAxis, const double majorAxis, const bool debug=false)
 {
     /*
      * function for checking whether two ellipses overlap, using the Viellard-Baron criterion
@@ -111,8 +111,8 @@ bool checkEllipseEllipseOverlap(double x1, double y1, double x2, double y2,
     return overlap;
 }
 
-bool checkBoundaryOverlapCircle(double R, double minorAxis, double majorAxis,
-                                double xc, double yc, double theta, bool debug=false)
+const bool checkBoundaryOverlapCircle(const double R, const double minorAxis, const double majorAxis,
+                                      const double xc, const double yc, const double theta, const bool debug=false)
 {
     /*
      * function for checking ellipse overlap with a circle - for boundary conditions of container

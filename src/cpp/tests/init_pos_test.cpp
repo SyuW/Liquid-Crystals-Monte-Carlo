@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../utils/initial.cpp"
 
-void testGenerate()
+int main()
 {
     int numParticlesToSimulate {200};
     double majorAxis {3};
@@ -28,12 +28,13 @@ void testGenerate()
     {
         // Print an error and exit
         std::cerr << "Could not open initialPositions.txt for writing.\n";
-        return;
+        return 1;
     }
 
     outFile << "# x y theta\n";
     outFile << "Semi-major axis: " << majorAxis << "\n";
     outFile << "Semi-minor axis: " << minorAxis << "\n";
+    outFile << "Boundary radius: " << boundaryRadius << "\n";
     for (int particleIndex=0; particleIndex < initialPositions.getNumberOfRows(); ++particleIndex)
     {
         outFile << initialPositions(particleIndex, 0) 
@@ -47,5 +48,5 @@ void testGenerate()
 
     std::cout << "Initial positions file creation was successful.\n";
 
-    return;
+    return 0;
 }

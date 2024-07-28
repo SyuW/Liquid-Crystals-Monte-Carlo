@@ -11,7 +11,7 @@
 int main() 
 {
     // system setup
-    int numParticlesToSimulate {65};
+    int numParticlesToSimulate {100};
     double boundaryRadius {25};
     double majorAxis {5};
     double minorAxis {1};
@@ -38,7 +38,7 @@ int main()
     initFile.close();
 
     // system-independent simulation parameters
-    int numMonteCarloSteps {1000};
+    int numMonteCarloSteps {10000};
 
     // seed a random number generator
     std::random_device r;
@@ -72,7 +72,9 @@ int main()
             proposedY = posArray(particleIndex1, 1) + u_y;
             proposedTh = posArray(particleIndex1, 2) + u_t;
 
-            if (checkBoundaryOverlapCircle(boundaryRadius, minorAxis, majorAxis, proposedX, proposedY, proposedTh))
+            bool boundaryOverlapVar { checkBoundaryOverlapCircle(boundaryRadius, minorAxis, majorAxis, proposedX, proposedY, proposedTh) };
+
+            if (pow(proposedX, 2) + pow(proposedY, 2) > pow(boundaryRadius, 2) || boundaryOverlapVar)
             {
                 continue;
             }
@@ -85,13 +87,11 @@ int main()
                     continue;
                 }
 
-                double x2, y2, th2;
+                double x2 { posArray(particleIndex2, 0) };
+                double y2 { posArray(particleIndex2, 1) };
+                double t2 { posArray(particleIndex2, 2) };
 
-                x2 = posArray(particleIndex2, 0);
-                y2 = posArray(particleIndex2, 1);
-                th2 = posArray(particleIndex2, 2);
-
-                if (checkEllipseEllipseOverlap(proposedX, proposedY, x2, y2, proposedTh, th2, minorAxis, majorAxis))
+                if (checkEllipseEllipseOverlap(proposedX, proposedY, x2, y2, proposedTh, t2, minorAxis, majorAxis))
                 {
                     overlapVar = true;
                     break;

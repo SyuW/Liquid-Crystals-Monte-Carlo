@@ -235,6 +235,29 @@ def HardBoundaryCircle_Disc(R, shortAxis, longAxis, xc, yc, theta):
         else:
             overlap = False
 
+    print("----------------------------------")
+    print(" ")
+    print("Inputs:")
+    print("Boundary radius", R)
+    print("Ellipse center x-position:", xc)
+    print("Ellipse center y-position:", yc)
+    print("Ellipse rotation angle:", theta)
+    print("Major axis:", longAxis)
+    print("Minor axis:", shortAxis)
+    print(" ")
+    print("Outputs:")
+    print("A:", A)
+    print("B:", B)
+    print("C:", C)
+    print("D:", D)
+    print("E:", E)
+    print("P:", P)
+    print("R_d:", R_d)
+    print("D_d:", D_d)
+    print("delta:", delta)
+    print("delta_0:", delta_0)
+    print("----------------------------------")
+
     return overlap
 
 

@@ -207,6 +207,7 @@ const bool checkBoundaryOverlapCircle(const double R, const double minorAxis, co
         std::cout << "D_d: " << D_d << "\n";
         std::cout << "delta: " << delta << "\n";
         std::cout << "delta_0: " << delta_0 << "\n";
+        std::cout << "overlap: " << overlap << "\n";
         std::cout << "-------------------" << "\n";
     }
 

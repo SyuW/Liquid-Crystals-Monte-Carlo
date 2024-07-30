@@ -6,6 +6,7 @@ from math import trunc
 from operator import itemgetter
 import sys
 import math
+import time
 
 #from numba import jit
 
@@ -187,9 +188,9 @@ def HardBoundaryCircle_Disc(R, shortAxis, longAxis, xc, yc, theta):
     sin2 = np.sin(2 * theta)
 
     A = longAxis ** 2 + xc ** 2 + yc ** 2 - 2 * longAxis * (xc * cos + yc * sin) - R ** 2
-    B = 4 * shortAxis * (yc * cos - xc * cos)
+    B = 4 * shortAxis * (yc * cos - xc * sin)
     C = 4 * (shortAxis ** 2) - 2 * (longAxis ** 2) + 2 * (xc ** 2) + 2 * (yc ** 2) - 2 * (R ** 2)
-    D = 4 * shortAxis * (yc * cos - xc * cos)
+    D = 4 * shortAxis * (yc * cos - xc * sin)
     E = longAxis ** 2 + 2 * longAxis * (xc * cos + yc * sin) + xc ** 2 + yc ** 2 - R ** 2
 
     delta = (256 * (A * E) ** 3
@@ -198,6 +199,7 @@ def HardBoundaryCircle_Disc(R, shortAxis, longAxis, xc, yc, theta):
              + 144 * (C * E) * (A * D) ** 2
              - 27 * (A ** 2) * (D ** 4)
              + 144 * (A * C) * (B * E) ** 2
+             - 6 * (A * E) * (B * D) ** 2
              - 80 * (A * B * D * E) * (C) ** 2
              + 18 * (A * B * C) * (D ** 3)
              + 16 * (A * E) * (C ** 4)
@@ -541,19 +543,19 @@ def MC_Circ_Hard(PosArray, d_pos, d_ang, steps, n, l, a, b):
 
         plotCount += 1
 
-        if plotCount == (np.ceil(steps / 100)):
-            plotCount = 0
+        # if plotCount == (np.ceil(steps / 100)):
+        #     plotCount = 0
 
-            ######################################
+        #     ######################################
 
-            #### Periodically Save Snapshots #####
+        #     #### Periodically Save Snapshots #####
 
-            ######################################
+        #     ######################################
 
-            fileNameArray = 'PosArray.csv'
-            new_fileName = fileNameArray.split(".csv")[0] + str(u) + ".csv"
-            complete_name = os.path.join(folder_name, new_fileName)
-            np.savetxt(complete_name, PosArray, delimiter=',')
+        #     fileNameArray = 'PosArray.csv'
+        #     new_fileName = fileNameArray.split(".csv")[0] + str(u) + ".csv"
+        #     complete_name = os.path.join(folder_name, new_fileName)
+        #     np.savetxt(complete_name, PosArray, delimiter=',')
 
     reduced_density = n * np.pi * a * b / (np.pi * l ** 2)
 
@@ -1162,17 +1164,17 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, n, l, r2, a, b):
 
         plotCount += 1
 
-        if plotCount == (np.ceil(steps / 100)):
-            plotCount = 0
+        # if plotCount == (np.ceil(steps / 100)):
+        #     plotCount = 0
 
-            ######################################
+        #     ######################################
 
-            #### Periodically Save Data Snapshots #####
+        #     #### Periodically Save Data Snapshots #####
 
-            fileNameArray = 'PosArray.csv'
-            new_fileName = fileNameArray.split(".csv")[0] + str(u) + ".csv"
-            complete_name = os.path.join(folder_name, new_fileName)
-            np.savetxt(complete_name, PosArray, delimiter=',')
+        #     fileNameArray = 'PosArray.csv'
+        #     new_fileName = fileNameArray.split(".csv")[0] + str(u) + ".csv"
+        #     complete_name = os.path.join(folder_name, new_fileName)
+        #     np.savetxt(complete_name, PosArray, delimiter=',')
 
     reduced_density = n * np.pi * a * b / ((np.pi * l ** 2) - (np.pi * r2 ** 2))
 
@@ -1205,20 +1207,23 @@ def MC_Ann_Hard(PosArray, d_pos, d_ang, steps, n, l, r2, a, b):
     np.savetxt(complete_name, PosArray, delimiter=',')
 
 
+
 R = 25
 r = 0
 A = 3
-B = 3
-MCSteps = 500000
+B = 0.5
+MCSteps = 10000
 stepXY = 0.5 * R
 stepTh = np.pi / 2
 dely = 0  # % of a
 delx = 0  # % of a
 
-N = 225000000
-
 N = 200
+
+t0 = time.perf_counter()
 
 initialState = init_Circ_H_GrC(N, A, B, R, dely, delx)[0]
 
-MC_Ann_Hard(initialState, stepXY, stepTh, MCSteps, 2102003, R, r, A, B)
+MC_Circ_Hard(initialState, stepXY, stepTh, MCSteps, N, R, A, B)
+
+print(f"Execution time: {time.perf_counter() - t0} seconds.")

@@ -150,3 +150,6 @@ data/*
 
 # vector graphics files
 *.svg
+
+# output files
+*.csv

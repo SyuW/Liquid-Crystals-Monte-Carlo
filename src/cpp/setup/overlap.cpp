@@ -215,6 +215,53 @@ const bool checkBoundaryOverlapCircle(const double R, const double minorAxis, co
     return overlap;
 }
 
+const bool checkBoundaryOverlapLine(const double slope, const double intercept, const double minorAxis, const double majorAxis,
+                                    const double xc, const double yc, const double theta, const bool debug=false)
+{
+    bool overlap { false };
+    double cosine { cos(theta) };
+    double sine { sin(theta) };
+
+    double A, B, C;
+    double delta;
+
+    A = majorAxis * (slope * cosine - sine) + yc - slope * xc - intercept;
+    B = 2 * minorAxis * (cosine + slope * sine);
+    C = majorAxis * (sine - slope * cosine) + yc - slope * xc - intercept;
+
+    delta = pow(B, 2) - 4 * A * C;
+
+    if (delta < 0)
+        overlap = true; 
+    else
+        overlap = false;
+
+    if (debug)
+    {
+        std::cout << "------------------------" << "\n";
+        std::cout << "Debug option set. Printing out variable info..\n";
+        std::cout << "\n";
+        std::cout << "Inputs:\n";
+        std::cout << "Slope of line: " << slope << "\n";
+        std::cout << "Intercept of line: " << intercept << "\n";
+        std::cout << "Ellipse center x-position: " << xc << "\n";
+        std::cout << "Ellipse center y-position: " << yc << "\n";
+        std::cout << "Ellipse rotation angle: " << theta << "\n";
+        std::cout << "Major axis: " << majorAxis << "\n";
+        std::cout << "Minor axis: " << minorAxis << "\n";
+        std::cout << "\n";
+        std::cout << "Outputs:" << "\n";
+        std::cout << "A: " << A << "\n";
+        std::cout << "B: " << B << "\n";
+        std::cout << "C: " << C << "\n";
+        std::cout << "delta: " << delta << "\n";
+        std::cout << "overlap: " << overlap << "\n";
+        std::cout << "-------------------" << "\n";
+    }
+
+    return overlap;
+}
+
 // check overlap between two identical ellipses
 bool checkEllipseEllipseOverlap_old(double x1, double y1, double x2, double y2, double theta1, double theta2, double minorAxis, double majorAxis)
 {

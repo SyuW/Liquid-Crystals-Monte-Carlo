@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <random>
@@ -10,6 +11,8 @@
 
 int main() 
 {
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
     // system setup
     int numParticles {100};
     double boundaryRadius {25};
@@ -48,7 +51,7 @@ int main()
     initFile.close();
 
     // system-independent simulation parameters
-    int numMonteCarloSteps {50000};
+    int numMonteCarloSteps {20000};
 
     // seed a random number generator
     std::random_device r;
@@ -209,6 +212,9 @@ int main()
     outFile.close();
 
     std::cout << "Done writing to output file.\n";
+
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
 
     return 0;
 }

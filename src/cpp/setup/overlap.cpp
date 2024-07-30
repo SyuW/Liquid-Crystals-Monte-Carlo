@@ -135,10 +135,10 @@ const bool checkBoundaryOverlapCircle(const double R, const double minorAxis, co
     double delta, delta_0;
 
     A = pow(majorAxis, 2) + pow(xc, 2) + pow(yc, 2) - 2 * majorAxis * (xc * cosine + yc * sine) - pow(R, 2);
-    B = 4 * minorAxis * (yc - xc) * cosine;
+    B = 4 * minorAxis * (xc * sine + yc * cosine - majorAxis * sine2);
     C = 4 * pow(minorAxis, 2) - 2 * pow(majorAxis, 2) + 2 * pow(xc, 2) + 2 * pow(yc, 2) - 2 * pow(R, 2);
-    D = 4 * minorAxis * (yc - xc) * cosine;
-    E = pow(majorAxis, 2) + 2 * majorAxis * (xc * cosine + yc * sine) + pow(xc, 2) + pow(yc, 2) - pow(R, 2);
+    D = 4 * minorAxis * (xc * sine + yc * cosine + majorAxis * sine2);
+    E = pow(majorAxis, 2) + pow(xc, 2) + pow(yc, 2) + 2 * majorAxis * (xc * cosine + yc * sine) - pow(R, 2);
 
     P = 8 * A * C - 3 * pow(B, 2);
     R_d = pow(B, 3) + 8 * D * pow(A, 2) - 4 * A * B * C;

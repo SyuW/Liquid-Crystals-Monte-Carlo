@@ -7,6 +7,78 @@
 #include <vector>
 
 
+Matrix initializePositionsBox(int numParticles, double majorAxis, double minorAxis, double length, double width)
+/*
+*/
+{
+    Matrix posArray(numParticles, 3);
+    double x_min, x_max;
+    double y_min, y_max;
+    double bottom_edge_pos, left_edge_pos;
+    int particleIndex;
+    bool arrayComplete;
+
+    y_min = -length / 2;
+    y_max = length / 2 - 2 * minorAxis;
+
+    // use bounding box strategy
+    bottom_edge_pos = y_min;
+
+    particleIndex = 0;
+    while (bottom_edge_pos < y_max)
+    {
+        x_min = -width / 2;
+        x_max =  width / 2;
+
+        left_edge_pos = x_min;
+        xgrid_size = static_cast<int>((x_max - x_min) / (2 * majorAxis));
+
+        for (int j = 0; j < xgrid_size; ++j)
+        {
+            posArray(particleIndex, 0) = left_edge_pos + majorAxis;
+            posArray(particleIndex, 1) = bottom_edge_pos + minorAxis;
+            posArray(particleIndex, 2) = 0;
+            particleIndex += 1;
+
+            if (particleIndex >= numParticles)
+            {
+                arrayComplete = true;
+                break;
+            }
+            // else, find position of next particle at same y-coord
+            else
+            {
+                left_edge_pos += 2 * majorAxis;
+            }
+        }
+
+        if (arrayComplete)
+            break;
+        else
+            bottom_edge_pos += 2 * minorAxis;
+    }
+
+    if (!arrayComplete)
+    {
+        std::cout << "Number of particles in requested initial config exceeds capacity of container,"
+                  << "returning resized positions array with " << particleIndex+1 << "particles." << "\n";
+
+        // return resized positions array
+        Matrix resized(particleIndex, 3);
+        for (int i=0; i < particleIndex; ++i)
+        {
+            resized(i, 0) = posArray(i, 0);
+            resized(i, 1) = posArray(i, 1);
+            resized(i, 2) = posArray(i, 2);
+        }
+
+        return resized;
+    }
+
+    return posArray;
+}
+
+
 Matrix initializePositionsCircle(int numParticles, double majorAxis, double minorAxis, double radius)
 /*
 */

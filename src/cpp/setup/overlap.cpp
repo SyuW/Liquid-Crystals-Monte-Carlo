@@ -231,7 +231,7 @@ const bool checkBoundaryOverlapLine(const double slope, const double intercept, 
 
     delta = pow(B, 2) - 4 * A * C;
 
-    if (delta < 0)
+    if (delta > 0)
         overlap = true; 
     else
         overlap = false;

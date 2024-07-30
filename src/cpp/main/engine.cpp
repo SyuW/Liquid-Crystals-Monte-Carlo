@@ -11,13 +11,23 @@
 int main() 
 {
     // system setup
-    int numParticlesToSimulate {100};
+    int numParticles {100};
     double boundaryRadius {25};
-    double majorAxis {5};
+    double majorAxis {7};
     double minorAxis {1};
 
+    std::cout << "What semi-major axis do you want?\n";
+    std::cin >> majorAxis;
+    std::cout << "What semi-minor axis do you want?\n";
+    std::cin >> minorAxis;
+    std::cout << "How many particles do you want?\n";
+    std::cin >> numParticles;
+
     // initial positions of particles inside container
-    Matrix posArray { initializePositionsCircle(numParticlesToSimulate, majorAxis, minorAxis, boundaryRadius) };
+    Matrix posArray { initializePositionsCircle(numParticles, majorAxis, minorAxis, boundaryRadius) };
+
+    // number of particles may change if there is not enough capacity inside container
+    numParticles = posArray.getNumberOfRows();
 
     std::ofstream initFile { "initPositions.txt" };
     initFile << "# x y theta\n";
@@ -38,7 +48,7 @@ int main()
     initFile.close();
 
     // system-independent simulation parameters
-    int numMonteCarloSteps {10000};
+    int numMonteCarloSteps {50000};
 
     // seed a random number generator
     std::random_device r;
@@ -49,38 +59,97 @@ int main()
     double stepXY { 0.5 * boundaryRadius };
     double stepTh { PI / 2 };
 
-    double u_x {};
-    double u_y {};
-    double u_t {};
+    double uX {};
+    double uY {};
+    double uTh {};
  
-    double proposedX { 0 };
-    double proposedY { 0 };
-    double proposedTh { 0 };
+    double proposedX {};
+    double proposedY {};
+    double proposedTh {};
 
     int acceptedMoves {0};
     int totalMoves {0};
 
+    int tunePeriod { numMonteCarloSteps / 50 };
+
     for (int stepNo {1}; stepNo <= numMonteCarloSteps; ++stepNo)
     {
-        for (int particleIndex1 {0}; particleIndex1 < posArray.getNumberOfRows(); ++particleIndex1)
+        for (int particleIndex1 {0}; particleIndex1 < numParticles; ++particleIndex1)
         {
-            u_x = uniform_dist(rng);
-            u_y = uniform_dist(rng);
-            u_t = uniform_dist(rng);
 
-            proposedX = posArray(particleIndex1, 0) + u_x;
-            proposedY = posArray(particleIndex1, 1) + u_y;
-            proposedTh = posArray(particleIndex1, 2) + u_t;
+            // tune displacements to maintain acceptance rate
+            if (stepNo % tunePeriod == 0)
+            {
+                if (static_cast<double>(acceptedMoves) / totalMoves < 0.47)
+                {
+                    stepTh *= 0.9;
+                    stepXY *= 0.9;
+                }
+                else if (static_cast<double>(acceptedMoves) / totalMoves < 0.37)
+                {
+                    stepTh *= 0.75;
+                    stepXY *= 0.75;
+                }
+                else if (static_cast<double>(acceptedMoves) / totalMoves < 0.27)
+                {
+                    stepTh *= 0.6;
+                    stepXY *= 0.6;
+                }
+                else if (static_cast<double>(acceptedMoves) / totalMoves < 0.17)
+                {
+                    stepTh *= 0.35;
+                    stepXY *= 0.35;
+                }
+                else if (static_cast<double>(acceptedMoves) / totalMoves < 0.07)
+                {
+                    stepTh *= 0.2;
+                    stepXY *= 0.2;
+                }
+                else if (static_cast<double>(acceptedMoves) / totalMoves > 0.57)
+                {
+                    stepTh *= 1.1;
+                    stepXY *= 1.1;
+                }
+                else if (static_cast<double>(acceptedMoves) / totalMoves > 0.67)
+                {
+                    stepTh *= 1.35;
+                    stepXY *= 1.35;
+                }
+                else if (static_cast<double>(acceptedMoves) / totalMoves > 0.77)
+                {
+                    stepTh *= 1.5;
+                    stepXY *= 1.5;
+                }
+                else if (static_cast<double>(acceptedMoves) / totalMoves > 0.87)
+                {
+                    stepTh *= 1.65;
+                    stepXY *= 1.65;
+                }
+                else if (static_cast<double>(acceptedMoves) / totalMoves > 0.97)
+                {
+                    stepTh *= 1.8;
+                    stepXY *= 1.8;
+                }
+            }
 
-            bool boundaryOverlapVar { checkBoundaryOverlapCircle(boundaryRadius, minorAxis, majorAxis, proposedX, proposedY, proposedTh) };
+            proposedX  = posArray(particleIndex1, 0) + stepXY * uniform_dist(rng);
+            proposedY  = posArray(particleIndex1, 1) + stepXY * uniform_dist(rng);
+            proposedTh = posArray(particleIndex1, 2) + stepTh * uniform_dist(rng);
 
-            if (pow(proposedX, 2) + pow(proposedY, 2) > pow(boundaryRadius, 2) || boundaryOverlapVar)
+            // ellipse center cannot be outside (less expensive)
+            if (pow(proposedX, 2) + pow(proposedY, 2) > pow(boundaryRadius, 2))
+            {
+                continue;
+            }
+
+            // otherwise, check overlap with boundary (more expensive)
+            else if (checkBoundaryOverlapCircle(boundaryRadius, minorAxis, majorAxis, proposedX, proposedY, proposedTh))
             {
                 continue;
             }
 
             bool overlapVar {false};
-            for (int particleIndex2 {0}; particleIndex2 < posArray.getNumberOfRows(); ++particleIndex2)
+            for (int particleIndex2 {0}; particleIndex2 < numParticles; ++particleIndex2)
             {
                 if (particleIndex2 == particleIndex1)
                 {

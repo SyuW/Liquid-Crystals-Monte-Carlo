@@ -35,10 +35,6 @@ void test_initPositionsBox()
     }
 
     outFile << "# x y theta\n";
-    outFile << "Semi-major axis: " << majorAxis << "\n";
-    outFile << "Semi-minor axis: " << minorAxis << "\n";
-    outFile << "Box length: " << boxLength << "\n";
-    outFile << "Box width: " << boxWidth << "\n";
     for (int particleIndex=0; particleIndex < initialPositions.getNumberOfRows(); ++particleIndex)
     {
         outFile << initialPositions(particleIndex, 0)
@@ -85,9 +81,6 @@ void test_initPositionsCircle()
     }
 
     outFile << "# x y theta\n";
-    outFile << "Semi-major axis: " << majorAxis << "\n";
-    outFile << "Semi-minor axis: " << minorAxis << "\n";
-    outFile << "Boundary radius: " << boundaryRadius << "\n";
     for (int particleIndex=0; particleIndex < initialPositions.getNumberOfRows(); ++particleIndex)
     {
         outFile << initialPositions(particleIndex, 0) 
@@ -107,7 +100,7 @@ int main()
 {
     
     test_initPositionsBox();
-    test_initPositionsCircle();
+    // test_initPositionsCircle();
 
     return 0;
 }

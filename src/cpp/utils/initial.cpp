@@ -7,7 +7,7 @@
 #include <vector>
 
 
-Matrix initializePositionsBox(const int numParticles, const double majorAxis, const double minorAxis, const double length, const double width)
+Matrix initializePositionsBox(const int numParticles, const double majorAxis, const double minorAxis, const double height, const double width)
 /*
 */
 {
@@ -17,10 +17,10 @@ Matrix initializePositionsBox(const int numParticles, const double majorAxis, co
     double bottom_edge_pos, left_edge_pos;
     int particleIndex;
     int xgrid_size;
-    bool arrayComplete;
+    bool arrayComplete {false};
 
-    y_min = -length / 2;
-    y_max = length / 2 - 2 * minorAxis;
+    y_min = 0;
+    y_max = height - 2 * minorAxis;
 
     // use bounding box strategy
     bottom_edge_pos = y_min;
@@ -28,8 +28,8 @@ Matrix initializePositionsBox(const int numParticles, const double majorAxis, co
     particleIndex = 0;
     while (bottom_edge_pos < y_max)
     {
-        x_min = -width / 2;
-        x_max =  width / 2;
+        x_min = 0;
+        x_max = width;
 
         left_edge_pos = x_min;
         xgrid_size = static_cast<int>((x_max - x_min) / (2 * majorAxis));

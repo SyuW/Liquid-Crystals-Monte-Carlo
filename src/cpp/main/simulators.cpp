@@ -6,6 +6,7 @@
 #include "../setup/overlap.cpp"
 #include "../auxiliary/list"
 
+
 void tuneAcceptanceRate(const double rate, double& stepXY, double& stepTh)
 /*
 */
@@ -65,6 +66,39 @@ void tuneAcceptanceRate(const double rate, double& stepXY, double& stepTh)
         stepTh *= 1.8;
         stepXY *= 1.8;
     }
+}
+
+
+Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarloSteps,
+                                 const double boxLength, const double boxWidth, const double majorAxis, const double minorAxis,
+                                 Matrix posArray)
+{
+    // seed a random number generator
+    std::random_device r;
+    std::seed_seq seed{r(), r(), r(), r(), r(), r(), r(), r()};
+    std::mt19937_64 rng(seed);
+    std::uniform_real_distribution<> uniform_dist(-1, 1);
+
+    double stepXY { 0.5 * boxWidth };
+    double stepTh { PI / 2 };
+
+    double proposedX {};
+    double proposedY {};
+    double proposedTh {};
+
+    int acceptedMoves {0};
+    int totalMoves {0};
+
+    int tunePeriod { numMonteCarloSteps / 50 };
+
+    // main simulation loop
+    for (int stepNo {1}; stepNo <= numMonteCarloSteps; ++stepNo)
+    {
+        for (int particleIndex1 {0}; particleIndex1 < numParticles; ++particleIndex1)
+        {
+        }
+    }
+
 }
 
 

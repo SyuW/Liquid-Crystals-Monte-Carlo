@@ -7,7 +7,7 @@
 #include <vector>
 
 
-Matrix initializePositionsBox(int numParticles, double majorAxis, double minorAxis, double length, double width)
+Matrix initializePositionsBox(const int numParticles, const double majorAxis, const double minorAxis, const double length, const double width)
 /*
 */
 {
@@ -80,7 +80,7 @@ Matrix initializePositionsBox(int numParticles, double majorAxis, double minorAx
 }
 
 
-Matrix initializePositionsCircle(int numParticles, double majorAxis, double minorAxis, double radius)
+Matrix initializePositionsCircle(const int numParticles, const double majorAxis, const double minorAxis, const double radius)
 /*
 */
 {

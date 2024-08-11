@@ -16,6 +16,7 @@ Matrix initializePositionsBox(int numParticles, double majorAxis, double minorAx
     double y_min, y_max;
     double bottom_edge_pos, left_edge_pos;
     int particleIndex;
+    int xgrid_size;
     bool arrayComplete;
 
     y_min = -length / 2;
@@ -60,8 +61,8 @@ Matrix initializePositionsBox(int numParticles, double majorAxis, double minorAx
 
     if (!arrayComplete)
     {
-        std::cout << "Number of particles in requested initial config exceeds capacity of container,"
-                  << "returning resized positions array with " << particleIndex+1 << "particles." << "\n";
+        std::cout << "Number of particles in requested initial config exceeds capacity of container, "
+                  << "returning resized positions array with " << particleIndex+1 << " particles." << "\n";
 
         // return resized positions array
         Matrix resized(particleIndex, 3);
@@ -89,7 +90,7 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
     double bottom_edge_pos, left_edge_pos;
     double intersect;
     int particleIndex;
-    int xgrid_size, ygrid_size;
+    int xgrid_size;
     bool arrayComplete {false};
 
     y_min = -sqrt(radius * radius - majorAxis * majorAxis);
@@ -140,7 +141,7 @@ Matrix initializePositionsCircle(int numParticles, double majorAxis, double mino
     if (!arrayComplete)
     {
         std::cout << "Number of particles in requested initial config exceeds capacity of container,"
-                  << "returning resized positions array with " << particleIndex+1 << " particles." << "\n";
+                  << "returning resized positions array with " << particleIndex << " particles." << "\n";
 
         // return resized position array
         Matrix resized(particleIndex, 3);

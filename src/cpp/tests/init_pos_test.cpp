@@ -9,10 +9,10 @@ void test_initPositionsBox()
     double majorAxis, minorAxis;
     double boxLength, boxWidth;
 
-    std::cout << "What length do you want for the box?";
+    std::cout << "What length do you want for the box?\n";
     std::cin >> boxLength;
 
-    std::cout << "What width do you want for the box?";
+    std::cout << "What width do you want for the box?\n";
     std::cin >> boxWidth;
 
     std::cout << "What is the semi-major axis of the ellipse particle?\n";
@@ -107,7 +107,7 @@ int main()
 {
     
     test_initPositionsBox();
-    test_initPositionsCircle
+    test_initPositionsCircle();
 
     return 0;
 }

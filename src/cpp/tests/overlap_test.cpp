@@ -141,14 +141,13 @@ int main()
     std::vector<ec_TestCase> ellipseCircleTests;
 
     // ellipse-ellipse overlap tests
-
-    // ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(-1, 0, 1, 0, PI/2, PI/2, 1, 3, true));
-    // ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(-1-0.01, 0, 1, 0, PI/2, PI/2, 1, 3, false));
-    // ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(0, 0, 8, 0, 0, PI/2, 1, 7, true));
-    // ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(0, 0, 0, 0, 0, PI/2, 1, 1, true));
-    // ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(0, 0, 0, 0, 0, PI/2, 7, 1, true));
-    // ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(-5, 0, -6, 10, -0.9, 0.9, 1, 7, true));
-    // ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(-5, 0, 1, 10, -0.9, 0.9, 1, 7, false));
+    ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(-1, 0, 1, 0, PI/2, PI/2, 1, 3, true));
+    ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(-1-0.01, 0, 1, 0, PI/2, PI/2, 1, 3, false));
+    ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(0, 0, 8, 0, 0, PI/2, 1, 7, true));
+    ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(0, 0, 0, 0, 0, PI/2, 1, 1, true));
+    ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(0, 0, 0, 0, 0, PI/2, 7, 1, true));
+    ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(-5, 0, -6, 10, -0.9, 0.9, 1, 7, true));
+    ellipseEllipseTests.push_back(makeEllipseEllipseTestCase(-5, 0, 1, 10, -0.9, 0.9, 1, 7, false));
 
     bool testOutcome;
     for (const auto& eetest: ellipseEllipseTests)
@@ -165,11 +164,11 @@ int main()
     }
 
     // ellipse-circle overlap tests
-    // ellipseCircleTests.push_back(makeEllipseCircleTestCase(4, 1, 3, 1, 1, 7, true));
-    // ellipseCircleTests.push_back(makeEllipseCircleTestCase(6.6, 1, 3, 4, 1, 4, true));
-    // ellipseCircleTests.push_back(makeEllipseCircleTestCase(3.5, 1, 3, 0, 0, 0, false));
-    // ellipseCircleTests.push_back(makeEllipseCircleTestCase(3.5, 1, 3, 0.5, 0, 0.8, false));
-    // ellipseCircleTests.push_back(makeEllipseCircleTestCase(3.5, 1, 3, 0.6, 0, 0, true));
+    ellipseCircleTests.push_back(makeEllipseCircleTestCase(4, 1, 3, 1, 1, 7, true));
+    ellipseCircleTests.push_back(makeEllipseCircleTestCase(6.6, 1, 3, 4, 1, 4, true));
+    ellipseCircleTests.push_back(makeEllipseCircleTestCase(3.5, 1, 3, 0, 0, 0, false));
+    ellipseCircleTests.push_back(makeEllipseCircleTestCase(3.5, 1, 3, 0.5, 0, 0.8, false));
+    ellipseCircleTests.push_back(makeEllipseCircleTestCase(3.5, 1, 3, 0.6, 0, 0, true));
     ellipseCircleTests.push_back(makeEllipseCircleTestCase(25, 1, 5, 22.8785, 7.73919, -4.33774, true));
 
     for (const auto& ectest: ellipseCircleTests)

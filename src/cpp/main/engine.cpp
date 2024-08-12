@@ -40,16 +40,12 @@ int main()
         std::cout << "What boundary radius do you want?\n";
         std::cin >> boundaryRadius;
 
-        // initial positions of particles inside container
+        // initial positions of particles inside hard circle
         Matrix initPosArray { initializePositionsCircle(numParticles, majorAxis, minorAxis, boundaryRadius) };
 
         // number of particles may change if there is not enough capacity inside container
         if (numParticles != initPosArray.getNumberOfRows())
         {
-            std::cout << "Capacity of container is not enough, changing number of particles from "
-                      << numParticles
-                      << " to "
-                      << initPosArray.getNumberOfRows() << ".\n";
             numParticles = initPosArray.getNumberOfRows();
         }
 
@@ -69,12 +65,32 @@ int main()
 
     else if (containerType == "box")
     {
-        double boxLength;
+        double boxHeight;
         double boxWidth;
-        std::cout << "What box length do you want?\n";
-        std::cin >> boxLength;
+        std::cout << "What box height do you want?\n";
+        std::cin >> boxHeight;
         std::cout << "What box width do you want?\n";
         std::cin >> boxWidth;
+
+        // initial positions of particles inside hard box
+        Matrix initPosArray { initializePositionsBox(numParticles, majorAxis, minorAxis, boxHeight, boxWidth) };
+
+        if (numParticles != initPosArray.getNumberOfRows())
+        {
+            numParticles = initPosArray.getNumberOfRows();
+        }
+
+        // write out the initial positions
+        writeOutPositionsBox(majorAxis, minorAxis, boxHeight, boxWidth, initPosArray, "initialPositions.txt");
+        std::cout << "Done generating/writing initial positions file.\n";
+
+        // start the simulation
+        Matrix finalPosArray = boxHardBoundaryMonteCarlo(numParticles, numMonteCarloSteps,
+                                                         boxHeight, boxWidth, majorAxis, minorAxis,
+                                                         initPosArray);
+
+        // finished simulation, write out to file
+        writeOutPositionsBox(majorAxis, minorAxis, boxHeight, boxWidth, finalPosArray, "finalPositions.txt");
     }
 
     // stop the clock

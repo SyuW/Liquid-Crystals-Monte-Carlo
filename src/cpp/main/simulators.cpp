@@ -70,7 +70,7 @@ void tuneAcceptanceRate(const double rate, double& stepXY, double& stepTh)
 
 
 Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarloSteps,
-                                 const double boxLength, const double boxWidth, const double majorAxis, const double minorAxis,
+                                 const double boxHeight, const double boxWidth, const double majorAxis, const double minorAxis,
                                  Matrix posArray)
 {
     // seed a random number generator
@@ -96,6 +96,34 @@ Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarlo
     {
         for (int particleIndex1 {0}; particleIndex1 < numParticles; ++particleIndex1)
         {
+            // tune displacements to maintain acceptance rate
+            if (stepNo % tunePeriod == 0)
+            {
+                tuneAcceptanceRate(static_cast<double>(acceptedMoves)/totalMoves, stepXY, stepTh);
+            }
+
+            // generate a trial position
+            proposedX = posArray(particleIndex1, 0) + stepXY * uniform_dist(rng);
+            proposedY = posArray(particleIndex1, 1) + stepXY * uniform_dist(rng);
+            proposedTh = posArray(particleIndex1, 2) + stepTh * uniform_dist(rng);
+
+            // ellipse center cannot be outside (less expensive)
+            if ((proposedX < 0 || proposedX > boxWidth) || (proposedY < 0 || proposedY > boxHeight))
+            {
+                totalMoves += 1;
+                continue;
+            }
+
+            // otherwise, check overlaps with boundary
+            // bottom boundary
+            else if (checkBoundaryOverlapLine(0, 0, minorAxis, majorAxis, proposedX, proposedY, proposedTh))
+            {
+                totalMoves += 1;
+                continue;
+            }
+
+            else if (checkBoundaryOverlapLine(0, ))
+
         }
     }
 

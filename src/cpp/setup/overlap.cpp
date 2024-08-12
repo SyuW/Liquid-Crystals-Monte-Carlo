@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 
+
 // check overlap between two identical ellipses -- alternate method using Vieillard-Baron
 const bool checkEllipseEllipseOverlap(const double x1, const double y1, const double x2, const double y2, 
                                       const double theta1, const double theta2,
@@ -260,6 +261,50 @@ const bool checkBoundaryOverlapLine(const double slope, const double intercept, 
     }
 
     return overlap;
+}
+
+// degenerate case for computing ellipse-line overlap when line is vertical
+bool checkVerticalBoundaryOverlap(const double xIntercept, const double minorAxis, const double majorAxis,
+                                  const double xc, const double yc, const double theta, const bool debug=false)
+{
+    bool overlap { false };
+    double cosine { cos(theta) };
+    double sine { sin(theta) };
+    double A, B, C;
+    double delta;
+
+    A = xc - xIntercept - majorAxis * cosine;
+    B = -2 * minorAxis * sine;
+    C = majorAxis * cosine + xc - xIntercept;
+
+    delta = pow(B, 2) - 4 * A * C;
+
+    if (delta > 0)
+        overlap = true;
+    else
+        overlap = false;
+
+    if (debug)
+    {
+        std::cout << "-------------------------" << "\n";
+        std::cout << "Debug option set. Printing out variable info...\n";
+        std::cout << "\n";
+        std::cout << "Inputs:\n";
+        std::cout << "x-intercept of vertical line: " << xIntercept << "\n";
+        std::cout << "Ellipse center x-position: " << xc << "\n";
+        std::cout << "Ellipse center y-position: " << yc << "\n";
+        std::cout << "Ellipse rotation angle: " << theta << "\n";
+        std::cout << "Major axis: " << majorAxis << "\n";
+        std::cout << "Minor axis: " << minorAxis << "\n";
+        std::cout << "\n";
+        std::cout << "Outputs:" << "\n";
+        std::cout << "A: " << A << "\n";
+        std::cout << "B: " << B << "\n";
+        std::cout << "C: " << C << "\n";
+        std::cout << "delta: " << delta << "\n";
+        std::cout << "overlap: " << overlap << "\n";
+        std::cout << "-------------------" << "\n";
+    }
 }
 
 // check overlap between two identical ellipses

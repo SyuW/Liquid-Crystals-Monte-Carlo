@@ -26,14 +26,14 @@ void writeOutPositionsCircle(const double majorAxis, const double minorAxis, con
 }
 
 
-void writeOutPositionsBox(const double majorAxis, const double minorAxis, const double length, const double width,
+void writeOutPositionsBox(const double majorAxis, const double minorAxis, const double height, const double width,
                           Matrix& posArray, const std::string fileName)
 {
     std::ofstream outFile { fileName };
     outFile << "# x y theta\n";
     outFile << "# Semi-major axis: " << majorAxis << "\n";
     outFile << "# Semi-minor axis: " << minorAxis << "\n";
-    outFile << "# Length: " << length << "\n";
+    outFile << "# Height: " << height << "\n";
     outFile << "# Width: " << width << "\n";
 
     for (int particleIndex=0; particleIndex < posArray.getNumberOfRows(); ++particleIndex)

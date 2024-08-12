@@ -305,6 +305,8 @@ bool checkVerticalBoundaryOverlap(const double xIntercept, const double minorAxi
         std::cout << "overlap: " << overlap << "\n";
         std::cout << "-------------------" << "\n";
     }
+
+    return overlap;
 }
 
 // check overlap between two identical ellipses

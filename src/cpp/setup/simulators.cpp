@@ -2,8 +2,8 @@
 #include <string>
 #include <map>
 
-#include "../setup/constants.hpp"
-#include "../setup/overlap.cpp"
+#include "./constants.hpp"
+#include "./overlap.cpp"
 #include "../auxiliary/list"
 
 
@@ -121,12 +121,64 @@ Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarlo
                 totalMoves += 1;
                 continue;
             }
+            // top boundary
+            else if (checkBoundaryOverlapLine(0, boxHeight, minorAxis, majorAxis, proposedX, proposedY, proposedTh))
+            {
+                totalMoves += 1;
+                continue;
+            }
+            // left boundary
+            else if (checkVerticalBoundaryOverlap(0, minorAxis, majorAxis, proposedX, proposedY, proposedTh))
+            {
+                totalMoves += 1;
+                continue;
+            }
+            // right boundary
+            else if (checkVerticalBoundaryOverlap(boxWidth, minorAxis, majorAxis, proposedX, proposedY, proposedTh))
+            {
+                totalMoves += 1;
+                continue;
+            }
 
-            else if (checkBoundaryOverlapLine(0, ))
+            bool overlapVar {false};
+            for (int particleIndex2 {0}; particleIndex2 < numParticles; ++particleIndex2)
+            {
+                if (particleIndex2 == particleIndex1)
+                {
+                    continue;
+                }
 
+                double x2 { posArray(particleIndex2, 0) };
+                double y2 { posArray(particleIndex2, 1) };
+                double t2 { posArray(particleIndex2, 2) };
+
+                // ellipse-ellipse overlap detected: exit the loop and reject
+                if (checkEllipseEllipseOverlap(proposedX, proposedY, x2, y2, proposedTh, t2, minorAxis, majorAxis))
+                {
+                    overlapVar = true;
+                    break;
+                }
+            }
+
+            if (overlapVar)
+            {
+                overlapVar = false;
+                totalMoves += 1;
+            }
+            else
+            {
+                posArray(particleIndex1, 0) = proposedX;
+                posArray(particleIndex1, 1) = proposedY;
+                posArray(particleIndex1, 2) = proposedTh;
+                acceptedMoves += 1;
+            }
         }
     }
 
+    std::cout << "Done simulation.\n";
+    std::cout << "Final acceptance rate: " << static_cast<double>(acceptedMoves)/totalMoves << "\n";
+
+    return posArray;
 }
 
 

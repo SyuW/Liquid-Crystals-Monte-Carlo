@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <iomanip>
@@ -7,9 +8,10 @@
 #include <map>
 #include <vector>
 
-#include "../utils/initial.cpp"
-#include "../setup/output.cpp"
-#include "simulators.cpp"
+// #include "../utils/initial.cpp"
+// #include "../setup/output.cpp"
+// #include "simulators.cpp"
+#include "setup.hpp"
 
 
 int main()
@@ -23,7 +25,23 @@ int main()
     double majorAxis {7};
     double minorAxis {1};
 
-    std::string containerType { "circle" };
+    std::vector<std::string> allowedContainerTypes;
+    allowedContainerTypes.push_back("circle");
+    allowedContainerTypes.push_back("box");
+
+    std::string container {};
+    std::cout << "What type of container do you want: ";
+    bool first = true;
+    for (auto const& allowed : allowedContainerTypes)
+    {
+        if (first) { first = false; } else { std::cout << ", "; }
+        std::cout << allowed;   
+    }
+    std::cout << ".\n";
+    std::cin >> container;
+
+    // check that container type is allowed
+    assert(std::find(allowedContainerTypes.begin(), allowedContainerTypes.end(), container) != allowedContainerTypes.end());
 
     std::cout << "What semi-major axis do you want?\n";
     std::cin >> majorAxis;
@@ -34,7 +52,7 @@ int main()
     std::cout << "How many Monte Carlo steps do you want to simulate?\n";
     std::cin >> numMonteCarloSteps;
 
-    if (containerType == "circle")
+    if (container == "circle")
     {
         double boundaryRadius;
         std::cout << "What boundary radius do you want?\n";
@@ -63,7 +81,7 @@ int main()
         std::cout << "Done writing to output file.\n";
     }
 
-    else if (containerType == "box")
+    else if (container == "box")
     {
         double boxHeight;
         double boxWidth;

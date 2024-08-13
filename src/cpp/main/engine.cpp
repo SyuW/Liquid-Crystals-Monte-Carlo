@@ -68,7 +68,7 @@ int main()
         }
 
         // write out the initial positions
-        writeOutPositionsCircle(majorAxis, minorAxis, boundaryRadius, initPosArray, "initialPositions.txt");
+        writeOutPositionsCircle(majorAxis, minorAxis, boundaryRadius, initPosArray, "initialPositions_circle.txt");
         std::cout << "Done generating/writing initial positions file.\n";
 
         // start the simulation
@@ -77,7 +77,7 @@ int main()
                                                             initPosArray);
 
         // finished simulation, write out to file
-        writeOutPositionsCircle(majorAxis, minorAxis, boundaryRadius, finalPosArray, "finalPositions.txt");
+        writeOutPositionsCircle(majorAxis, minorAxis, boundaryRadius, finalPosArray, "finalPositions_circle.txt");
         std::cout << "Done writing to output file.\n";
     }
 
@@ -99,7 +99,7 @@ int main()
         }
 
         // write out the initial positions
-        writeOutPositionsBox(majorAxis, minorAxis, boxHeight, boxWidth, initPosArray, "initialPositions.txt");
+        writeOutPositionsBox(majorAxis, minorAxis, boxHeight, boxWidth, initPosArray, "initialPositions_box.txt");
         std::cout << "Done generating/writing initial positions file.\n";
 
         // start the simulation
@@ -108,7 +108,7 @@ int main()
                                                          initPosArray);
 
         // finished simulation, write out to file
-        writeOutPositionsBox(majorAxis, minorAxis, boxHeight, boxWidth, finalPosArray, "finalPositions.txt");
+        writeOutPositionsBox(majorAxis, minorAxis, boxHeight, boxWidth, finalPosArray, "finalPositions_box.txt");
     }
 
     // stop the clock

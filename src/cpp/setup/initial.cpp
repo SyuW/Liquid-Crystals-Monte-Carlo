@@ -154,7 +154,7 @@ Matrix initializePositionsCircle(const int numParticles, const double majorAxis,
 
     if (!arrayComplete)
     {
-        std::cout << "Number of particles in requested initial config exceeds capacity of container,"
+        std::cout << "Number of particles in requested initial config exceeds capacity of container, "
                   << "returning resized positions array with " << particleIndex << " particles." << "\n";
 
         // return resized position array

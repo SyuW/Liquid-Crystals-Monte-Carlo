@@ -1,6 +1,6 @@
 #include <chrono>
 #include <iostream>
-#include "../utils/initial.cpp"
+#include "../setup/initial.cpp"
 
 
 void test_initPositionsBox()

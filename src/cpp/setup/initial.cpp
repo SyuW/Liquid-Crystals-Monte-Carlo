@@ -7,10 +7,17 @@
 #include <vector>
 
 
-Matrix initializePositionsBox(const int numParticles, const double majorAxis, const double minorAxis, const double height, const double width)
-/*
-*/
+Matrix initializePositionsBox(const int numParticles, const double majorAxis, const double minorAxis,
+                              const double height, const double width)
 {
+    /*
+     * numParticles
+     * majorAxis
+     * minorAxis
+     * height
+     * width
+     */
+
     Matrix posArray(numParticles, 3);
     double x_min, x_max;
     double y_min, y_max;
@@ -80,10 +87,17 @@ Matrix initializePositionsBox(const int numParticles, const double majorAxis, co
 }
 
 
-Matrix initializePositionsCircle(const int numParticles, const double majorAxis, const double minorAxis, const double radius)
-/*
-*/
+Matrix initializePositionsCircle(const int numParticles, const double majorAxis, const double minorAxis,
+                                 const double radius)
 {
+    /*
+     * numParticles
+     * majorAxis
+     * minorAxis
+     * radius
+     *
+     */
+
     Matrix posArray(numParticles, 3);
     double x_min, x_max;
     double y_min, y_max;

@@ -264,7 +264,7 @@ const bool checkBoundaryOverlapLine(const double slope, const double intercept, 
 }
 
 // degenerate case for computing ellipse-line overlap when line is vertical
-bool checkVerticalBoundaryOverlap(const double xIntercept, const double minorAxis, const double majorAxis,
+bool checkBoundaryOverlapVertical(const double xIntercept, const double minorAxis, const double majorAxis,
                                   const double xc, const double yc, const double theta, const bool debug=false)
 {
     bool overlap { false };

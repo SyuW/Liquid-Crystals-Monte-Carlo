@@ -1,38 +1,45 @@
 #ifndef SETUPHEADERDEF
 #define SETUPHEADERDEF
 
+#include "../auxiliary/list"
+// #include "../setup/overlap.cpp"
+#include "../setup/simulators.hpp"
+#include "../setup/output.hpp"
+#include "../setup/initial.hpp"
+
+
 // function declarations
 
 // overlap functions
-bool checkEllipseEllipseOverlap(double x1, double y1, double x2, double y2, double theta1, double theta2,
-                                double minorAxis, double majorAxis, bool verbose);
+// const bool checkEllipseEllipseOverlap(const double x1, const double y1, const double x2, const double y2,
+//                                       const double theta1, const double theta2,
+//                                       const double minorAxis, const double majorAxis, const bool debug=false);
                                 
-bool checkBoundaryOverlapCircle(double R, double minorAxis, double majorAxis,
-                                double xc, double yc, double theta, bool debug);
+// const bool checkBoundaryOverlapCircle(const double R, const double minorAxis, const double majorAxis,
+//                                       const double xc, const double yc, const double theta, const bool debug=false);
 
 // writing out
-void writeOutPositionsCircle(const double majorAxis, const double minorAxis, const double boundaryRadius,
-                             Matrix& posArray, const std::string fileName);
+// void writeOutPositionsCircle(const double majorAxis, const double minorAxis, const double boundaryRadius,
+//                              Matrix& posArray, const std::string fileName);
 
-void writeOutPositionsBox(const double majorAxis, const double minorAxis,
-                          const double length, const double width, Matrix& posArray, const std::string fileName);
+// void writeOutPositionsBox(const double majorAxis, const double minorAxis,
+//                           const double length, const double width, Matrix& posArray, const std::string fileName);
 
-// simulation functions
-void tuneAcceptanceRate(const double rate, double& stepXY, double& stepTh);
+// // initialization
+// Matrix initializePositionsBox(const int numParticles, const double majorAxis, const double minorAxis,
+//                               const double height, const double width);
 
-Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarloSteps,
-                                 const double boxHeight, const double boxWidth, const double majorAxis, const double minorAxis,
-                                 Matrix posArray);
+// Matrix initializePositionsCircle(const int numParticles, const double majorAxis, const double minorAxis,
+//                                  const double radius);
 
-Matrix circleHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarloSteps, const double boundaryRadius,
-                                    const double majorAxis, const double minorAxis, Matrix posArray);
+// // simulation functions
+// void tuneAcceptanceRate(const double rate, double& stepXY, double& stepTh);
 
+// Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarloSteps,
+//                                  const double boxHeight, const double boxWidth, const double majorAxis, const double minorAxis,
+//                                  Matrix posArray);
 
-#include "../auxiliary/list"
-#include "../setup/overlap.cpp"
-#include "../setup/simulators.cpp"
-#include "../setup/input.cpp"
-#include "../setup/output.cpp"
-#include "../utils/initial.cpp"
+// Matrix circleHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarloSteps, const double boundaryRadius,
+//                                     const double majorAxis, const double minorAxis, Matrix posArray);
 
 #endif

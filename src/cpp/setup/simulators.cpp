@@ -2,15 +2,22 @@
 #include <string>
 #include <map>
 
-#include "./constants.hpp"
-#include "./overlap.cpp"
 #include "../auxiliary/list"
-
+#include "./constants.hpp"
+#include "./overlap.hpp"
 
 void tuneAcceptanceRate(const double rate, double& stepXY, double& stepTh)
-/*
-*/
 {
+    /*
+     *
+     *
+     *
+     * 
+     * 
+     * 
+     * 
+     */
+
     if (rate <= 0.07)
     {
         stepTh *= 0.2;
@@ -73,6 +80,16 @@ Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarlo
                                  const double boxHeight, const double boxWidth, const double majorAxis, const double minorAxis,
                                  Matrix posArray)
 {
+    /*
+     * Hard particle Monte Carlo with hard box boundary conditions
+     *
+     * 
+     * 
+     * 
+     * 
+     * 
+     */
+    
     // seed a random number generator
     std::random_device r;
     std::seed_seq seed{r(), r(), r(), r(), r(), r(), r(), r()};
@@ -128,13 +145,13 @@ Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarlo
                 continue;
             }
             // left boundary
-            else if (checkVerticalBoundaryOverlap(0, minorAxis, majorAxis, proposedX, proposedY, proposedTh))
+            else if (checkBoundaryOverlapVertical(0, minorAxis, majorAxis, proposedX, proposedY, proposedTh))
             {
                 totalMoves += 1;
                 continue;
             }
             // right boundary
-            else if (checkVerticalBoundaryOverlap(boxWidth, minorAxis, majorAxis, proposedX, proposedY, proposedTh))
+            else if (checkBoundaryOverlapVertical(boxWidth, minorAxis, majorAxis, proposedX, proposedY, proposedTh))
             {
                 totalMoves += 1;
                 continue;

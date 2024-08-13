@@ -1,1 +1,6 @@
+#ifndef CONSTANTSHEADERDEF
+#define CONSTANTSHEADERDEF 
+
 double PI { 3.1415926535897932 };
+
+#endif

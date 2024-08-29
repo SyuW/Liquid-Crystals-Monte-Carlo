@@ -153,3 +153,4 @@ data/*
 
 # output files
 *.csv
+*positionsStep*

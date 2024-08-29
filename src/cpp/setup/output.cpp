@@ -7,6 +7,17 @@
 
 void writeOutPositionsCircle(const double majorAxis, const double minorAxis, const double boundaryRadius,
                              Matrix& posArray, const std::string fileName)
+/*
+ * Write out particle positions in circle to a txt file 
+ * 
+ * majorAxis
+ * minorAxis
+ * boundaryRadius
+ * posArray
+ * fileName - 
+ * 
+ */
+
 {
     std::ofstream outFile { fileName };
     outFile << "# x y theta\n";
@@ -28,6 +39,17 @@ void writeOutPositionsCircle(const double majorAxis, const double minorAxis, con
 
 void writeOutPositionsBox(const double majorAxis, const double minorAxis, const double height, const double width,
                           Matrix& posArray, const std::string fileName)
+/*
+ * Write out particle positions in box to a txt file
+ *
+ * majorAxis
+ * minorAxis
+ * height
+ * width
+ * posArray
+ * fileName
+ * 
+ */
 {
     std::ofstream outFile { fileName };
     outFile << "# x y theta\n";

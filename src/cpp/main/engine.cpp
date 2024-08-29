@@ -16,14 +16,14 @@
 
 int main()
 {
-    // start the timer
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-
     // system setup
     int numParticles {100};
     int numMonteCarloSteps {20000};
     double majorAxis {7};
     double minorAxis {1};
+
+    // for timing
+    std::chrono::steady_clock::time_point begin;
 
     std::vector<std::string> allowedContainerTypes;
     allowedContainerTypes.push_back("circle");
@@ -58,6 +58,9 @@ int main()
         std::cout << "What boundary radius do you want?\n";
         std::cin >> boundaryRadius;
 
+        // start the timer
+        begin = std::chrono::steady_clock::now();
+
         // initial positions of particles inside hard circle
         Matrix initPosArray { initializePositionsCircle(numParticles, majorAxis, minorAxis, boundaryRadius) };
 
@@ -78,7 +81,7 @@ int main()
 
         // finished simulation, write out to file
         writeOutPositionsCircle(majorAxis, minorAxis, boundaryRadius, finalPosArray, "finalPositions_circle.txt");
-        std::cout << "Done writing to output file.\n";
+        std::cout << "Done writing final positions to output file.\n";
     }
 
     else if (container == "box")
@@ -89,6 +92,9 @@ int main()
         std::cin >> boxHeight;
         std::cout << "What box width do you want?\n";
         std::cin >> boxWidth;
+
+        // start the timer
+        begin = std::chrono::steady_clock::now();
 
         // initial positions of particles inside hard box
         Matrix initPosArray { initializePositionsBox(numParticles, majorAxis, minorAxis, boxHeight, boxWidth) };
@@ -109,6 +115,7 @@ int main()
 
         // finished simulation, write out to file
         writeOutPositionsBox(majorAxis, minorAxis, boxHeight, boxWidth, finalPosArray, "finalPositions_box.txt");
+        std::cout << "Done writing final positions to output file.\n";
     }
 
     // stop the clock

@@ -5,17 +5,16 @@
 #include "../auxiliary/list"
 #include "./constants.hpp"
 #include "./overlap.hpp"
+#include "./output.hpp"
+
 
 void tuneAcceptanceRate(const double rate, double& stepXY, double& stepTh)
 {
-    /*
+    /* Helper function for tuning acceptance rates throughout the duration of a simulation
      *
-     *
-     *
-     * 
-     * 
-     * 
-     * 
+     * rate - current acceptance rate of Monte Carlo steps
+     * stepXY - maximum step sizes for translation x and y directions
+     * stepTh - maximum angle of rotation
      */
 
     if (rate <= 0.07)
@@ -82,15 +81,18 @@ Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarlo
 {
     /*
      * Hard particle Monte Carlo with hard box boundary conditions
-     *
      * 
-     * 
-     * 
-     * 
+     * numParticles         - number of particles to simulate
+     * numMonteCarloSteps   - number of Monte Carlo steps to perform
+     * boxHeight            - height of box
+     * boxWidth             - width of box
+     * majorAxis            - major axis of ellipse particle
+     * minorAxis            - minor axis of ellipse particle
+     * posArray             - array of particle positions
      * 
      */
     
-    // seed a random number generator
+    // seed a Mersenne Twister random number generator
     std::random_device r;
     std::seed_seq seed{r(), r(), r(), r(), r(), r(), r(), r()};
     std::mt19937_64 rng(seed);
@@ -107,18 +109,28 @@ Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarlo
     int totalMoves {0};
 
     int tunePeriod { numMonteCarloSteps / 50 };
+    int writeOutPeriod { 1000 };
 
     // main simulation loop
     for (int stepNo {1}; stepNo <= numMonteCarloSteps; ++stepNo)
     {
+
+        // tune displacements to maintain acceptance rate
+        if (stepNo % tunePeriod == 0)
+        {
+            tuneAcceptanceRate(static_cast<double>(acceptedMoves)/totalMoves, stepXY, stepTh);
+        }
+
+        // write out configurations periodically
+        if (stepNo % writeOutPeriod == 0)
+        {
+            std::string outName { "positionsStep" + std::to_string(stepNo) };
+            writeOutPositionsBox(majorAxis, minorAxis, boxHeight, boxWidth, posArray, outName);
+        }
+
         for (int particleIndex1 {0}; particleIndex1 < numParticles; ++particleIndex1)
         {
-            // tune displacements to maintain acceptance rate
-            if (stepNo % tunePeriod == 0)
-            {
-                tuneAcceptanceRate(static_cast<double>(acceptedMoves)/totalMoves, stepXY, stepTh);
-            }
-
+    
             // generate a trial position
             proposedX = posArray(particleIndex1, 0) + stepXY * uniform_dist(rng);
             proposedY = posArray(particleIndex1, 1) + stepXY * uniform_dist(rng);

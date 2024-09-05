@@ -306,3 +306,17 @@ Matrix circleHardBoundaryMonteCarlo(const int numParticles, const int numMonteCa
     return posArray;
 }
 
+
+Matrix annulusHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarloSteps, const double innerRadius,
+                                     const double outerRadius, const double majorAxis, const double minorAxis, Matrix posArray)
+{
+
+    // seed a random number generator
+    std::random_device r;
+    std::seed_seq seed{r(), r(), r(), r(), r(), r(), r(), r()};
+    std::mt19937_64 rng(seed);
+    std::uniform_real_distribution<> uniform_dist(-1, 1);
+
+
+    return posArray;
+}

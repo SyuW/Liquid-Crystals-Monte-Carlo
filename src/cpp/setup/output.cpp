@@ -68,3 +68,5 @@ void writeOutPositionsBox(const double majorAxis, const double minorAxis, const 
     }
     outFile.close();
 }
+
+void write

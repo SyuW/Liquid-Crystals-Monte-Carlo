@@ -2,10 +2,10 @@
 #include <string>
 #include <map>
 
-#include "../auxiliary/list"
-#include "./constants.hpp"
-#include "./overlap.hpp"
-#include "./output.hpp"
+#include "src/cpp/auxiliary/list"
+#include "src/cpp/setup/constants.hpp"
+#include "src/cpp/setup/overlap.hpp"
+#include "src/cpp/setup/output.hpp"
 
 
 void tuneAcceptanceRate(const double rate, double& stepXY, double& stepTh)

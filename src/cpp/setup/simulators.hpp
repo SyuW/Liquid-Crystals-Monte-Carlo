@@ -1,7 +1,7 @@
 #ifndef SIMULATORSHEADERDEF
 #define SIMULATORSHEADERDEF
 
-#include "../auxiliary/list"
+#include "src/cpp/auxiliary/list"
 
 void tuneAcceptanceRate(const double rate, double& stepXY, double& stepTh);
 

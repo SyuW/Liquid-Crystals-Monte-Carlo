@@ -1,4 +1,4 @@
-#include "../auxiliary/list"
+#include "src/cpp/auxiliary/list"
 
 #include <iostream>
 #include <fstream>

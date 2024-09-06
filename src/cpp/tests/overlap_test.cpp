@@ -1,6 +1,7 @@
-#include "../auxiliary/list"
-#include "../setup/overlap.cpp"
-#include "../main/constants.hpp"
+#include "src/cpp/auxiliary/list"
+#include "src/cpp/setup/overlap.hpp"
+#include "src/cpp/main/setup.hpp"
+#include "src/cpp/setup/constants.hpp"
 
 #include <vector>
 

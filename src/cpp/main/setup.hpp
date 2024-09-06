@@ -1,11 +1,11 @@
 #ifndef SETUPHEADERDEF
 #define SETUPHEADERDEF
 
-#include "../auxiliary/list"
+#include "src/cpp/auxiliary/list"
 // #include "../setup/overlap.cpp"
-#include "../setup/simulators.hpp"
-#include "../setup/output.hpp"
-#include "../setup/initial.hpp"
+#include "src/cpp/setup/simulators.hpp"
+#include "src/cpp/setup/output.hpp"
+#include "src/cpp/setup/initial.hpp"
 
 
 // function declarations

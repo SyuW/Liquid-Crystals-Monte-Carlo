@@ -154,3 +154,6 @@ data/*
 # output files
 *.csv
 *positionsStep*
+
+# experiments
+*experiments*

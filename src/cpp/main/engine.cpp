@@ -11,7 +11,7 @@
 // #include "../utils/initial.cpp"
 // #include "../setup/output.cpp"
 // #include "simulators.cpp"
-#include "setup.hpp"
+#include "src/cpp/main/setup.hpp"
 
 
 int main()

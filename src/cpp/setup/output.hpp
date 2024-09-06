@@ -2,7 +2,7 @@
 #define OUTPUTHEADERDEF
 
 #include <string>
-#include "../auxiliary/list"
+#include "src/cpp/auxiliary/list"
 
 void writeOutPositionsCircle(const double majorAxis, const double minorAxis, const double boundaryRadius,
                              Matrix& posArray, const std::string fileName);

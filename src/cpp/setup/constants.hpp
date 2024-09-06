@@ -2,5 +2,6 @@
 #define CONSTANTSHEADERDEF 
 
 double PI { 3.1415926535897932 };
+double E  { 2.7182818284590452 };
 
 #endif

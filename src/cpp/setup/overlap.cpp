@@ -1,4 +1,4 @@
-#include "../auxiliary/list"
+#include "src/cpp/auxiliary/list"
 
 // standard library imports
 #include <cmath>

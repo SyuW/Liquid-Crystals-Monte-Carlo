@@ -1,5 +1,6 @@
 # final program
 TARGET_EXEC := lcsim
+TESTS_EXEC := tests
 
 # directories
 BUILD_DIR := ./build

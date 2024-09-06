@@ -97,13 +97,3 @@ void test_initPositionsCircle()
 
     std::cout << "Initial positions file creation was successful.\n";
 }
-
-
-int main()
-{
-    
-    test_initPositionsBox();
-    // test_initPositionsCircle();
-
-    return 0;
-}

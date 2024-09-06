@@ -8,10 +8,11 @@
 #include <map>
 #include <vector>
 
-// #include "../utils/initial.cpp"
-// #include "../setup/output.cpp"
-// #include "simulators.cpp"
-#include "src/cpp/main/setup.hpp"
+
+#include "src/cpp/auxiliary/list"
+#include "src/cpp/setup/output.hpp"
+#include "src/cpp/setup/initial.hpp"
+#include "src/cpp/setup/simulators.hpp"
 
 
 int main()

@@ -30,6 +30,9 @@ int main()
     std::vector<std::string> allowedContainerTypes;
     allowedContainerTypes.push_back("circle");
     allowedContainerTypes.push_back("box");
+    std::vector<std::string> allowedBoundaryTypes;
+    allowedBoundaryTypes.push_back("hard");
+    allowedBoundaryTypes.push_back("periodic");
 
     std::string container {};
     std::cout << "What type of container do you want: ";
@@ -57,80 +60,77 @@ int main()
 
     if (container == "circle")
     {
-        // output directory
         std::string outDir { "circleSimOut/" };
         std::filesystem::create_directory(outDir);
-
         double boundaryRadius;
         std::cout << "What boundary radius do you want?\n";
         std::cin >> boundaryRadius;
-
-        // start the timer
         begin = std::chrono::steady_clock::now();
-
-        // initial positions of particles inside hard circle
         Matrix initPosArray { initializePositionsCircle(numParticles, majorAxis, minorAxis, boundaryRadius) };
-
-        // number of particles may change if there is not enough capacity inside container
         if (numParticles != initPosArray.getNumberOfRows())
         {
             numParticles = initPosArray.getNumberOfRows();
         }
-
-        // write out the simulation notes file
         writeCircleSimNotes(majorAxis, minorAxis, boundaryRadius, numMonteCarloSteps, outDir + "circleSimNotes.txt");
-
-        // write out the initial positions
         writeOutPositions(initPosArray, outDir + "initialPositions_circle.txt");
         std::cout << "Done generating/writing initial positions file.\n";
-
-        // start the simulation
         Matrix finalPosArray = circleHardBoundaryMonteCarlo(numParticles, numMonteCarloSteps,
                                                             boundaryRadius, majorAxis, minorAxis,
                                                             initPosArray, outDir);
-
-        // finished simulation, write out to file
         writeOutPositions(finalPosArray, outDir + "finalPositions_circle.txt");
         std::cout << "Done writing final positions to output file.\n";
     }
-
     else if (container == "box")
     {
-        // output directory
-        std::string outDir { "boxSimOut/" };
-        std::filesystem::create_directory(outDir);
-
+        // type of boundary conditions
+        std::string bType {};
+        std::cout << "What condition do you want to apply to the box boundary: ";
+        first = true;
+        for (auto const& allowed : allowedBoundaryTypes)
+        {
+            if (first) { first = false; } else { std::cout << ", "; }
+            std::cout << allowed;
+        }
+        std::cout << ".\n";
+        std::cin >> bType;
+        // check that the container type is allowed
+        assert(std::find(allowedBoundaryTypes.begin(), allowedBoundaryTypes.end(), bType)
+               != allowedBoundaryTypes.end());
+        // set the box height and width
         double boxHeight;
         double boxWidth;
         std::cout << "What box height do you want?\n";
         std::cin >> boxHeight;
         std::cout << "What box width do you want?\n";
         std::cin >> boxWidth;
-
-        // start the timer
-        begin = std::chrono::steady_clock::now();
-
-        // initial positions of particles inside hard box
-        Matrix initPosArray { initializePositionsBox(numParticles, majorAxis, minorAxis, boxHeight, boxWidth) };
-
-        if (numParticles != initPosArray.getNumberOfRows())
-        {
-            numParticles = initPosArray.getNumberOfRows();
-        }
-
-        // write the simulation notes file
+        // create the output directory
+        std::string outDir {};
+        if ( bType == "hard" ) { 
+            outDir = "boxHardSimOut/"; }
+        else if ( bType == "periodic" ) {
+            outDir = "boxPeriodicSimOut/"; }
+        std::filesystem::create_directory(outDir);
+        // write simulation notes file
         writeBoxSimNotes(majorAxis, minorAxis, boxHeight, boxWidth, numMonteCarloSteps, outDir + "boxSimNotes.txt");
-
-        // write out the initial positions
+        // ready to begin the simulation, start the clock
+        begin = std::chrono::steady_clock::now();
+        // create the initial positions array
+        Matrix initPosArray { initializePositionsBox(numParticles, majorAxis, minorAxis, boxHeight, boxWidth) };
         writeOutPositions(initPosArray, outDir + "initialPositions_box.txt");
         std::cout << "Done generating/writing initial positions file.\n";
-
+        if (numParticles != initPosArray.getNumberOfRows()) { numParticles = initPosArray.getNumberOfRows(); }
         // start the simulation
-        Matrix finalPosArray = boxHardBoundaryMonteCarlo(numParticles, numMonteCarloSteps,
-                                                         boxHeight, boxWidth, majorAxis, minorAxis,
-                                                         initPosArray, outDir);
-
-        // finished simulation, write out to file
+        Matrix finalPosArray {initPosArray};
+        if ( bType == "hard" ) {
+            finalPosArray = boxHardBoundaryMonteCarlo(numParticles, numMonteCarloSteps,
+                                                      boxHeight, boxWidth, majorAxis, minorAxis,
+                                                      initPosArray, outDir);
+        }
+        else if ( bType == "periodic" ) {
+            finalPosArray = boxPeriodicBoundaryMonteCarlo(numParticles, numMonteCarloSteps,
+                                                          boxHeight, boxWidth, majorAxis, minorAxis,
+                                                          initPosArray, outDir);
+        }
         writeOutPositions(finalPosArray, outDir + "finalPositions_box.txt");
         std::cout << "Done writing final positions to output file.\n";
     }

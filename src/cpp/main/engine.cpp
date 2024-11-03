@@ -111,7 +111,7 @@ int main()
             outDir = "boxPeriodicSimOut/"; }
         std::filesystem::create_directory(outDir);
         // write simulation notes file
-        writeBoxSimNotes(majorAxis, minorAxis, boxHeight, boxWidth, numMonteCarloSteps, outDir + "boxSimNotes.txt");
+        writeBoxSimNotes(majorAxis, minorAxis, boxHeight, boxWidth, numMonteCarloSteps, bType, outDir + "boxSimNotes.txt");
         // ready to begin the simulation, start the clock
         begin = std::chrono::steady_clock::now();
         // create the initial positions array

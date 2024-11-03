@@ -12,6 +12,7 @@ void writeCircleSimNotes(const double majorAxis, const double minorAxis,
 void writeBoxSimNotes(const double majorAxis, const double minorAxis,
                       const double boxHeight, const double boxWidth,
                       const int numMonteCarloSteps,
+                      const std::string boundaryCondition,
                       const std::string fileName);
 
 void writeOutPositions(Matrix& posArray, const std::string fileName);

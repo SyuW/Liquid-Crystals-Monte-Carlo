@@ -3,6 +3,7 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
+#include <filesystem>
 #include <random>
 #include <string>
 #include <map>
@@ -42,7 +43,8 @@ int main()
     std::cin >> container;
 
     // check that container type is allowed
-    assert(std::find(allowedContainerTypes.begin(), allowedContainerTypes.end(), container) != allowedContainerTypes.end());
+    assert(std::find(allowedContainerTypes.begin(), allowedContainerTypes.end(), container)
+           != allowedContainerTypes.end());
 
     std::cout << "What semi-major axis do you want?\n";
     std::cin >> majorAxis;
@@ -55,6 +57,10 @@ int main()
 
     if (container == "circle")
     {
+        // output directory
+        std::string outDir { "circleSimOut/" };
+        std::filesystem::create_directory(outDir);
+
         double boundaryRadius;
         std::cout << "What boundary radius do you want?\n";
         std::cin >> boundaryRadius;
@@ -71,22 +77,29 @@ int main()
             numParticles = initPosArray.getNumberOfRows();
         }
 
+        // write out the simulation notes file
+        writeCircleSimNotes(majorAxis, minorAxis, boundaryRadius, numMonteCarloSteps, outDir + "circleSimNotes.txt");
+
         // write out the initial positions
-        writeOutPositionsCircle(majorAxis, minorAxis, boundaryRadius, initPosArray, "initialPositions_circle.txt");
+        writeOutPositions(initPosArray, outDir + "initialPositions_circle.txt");
         std::cout << "Done generating/writing initial positions file.\n";
 
         // start the simulation
         Matrix finalPosArray = circleHardBoundaryMonteCarlo(numParticles, numMonteCarloSteps,
                                                             boundaryRadius, majorAxis, minorAxis,
-                                                            initPosArray);
+                                                            initPosArray, outDir);
 
         // finished simulation, write out to file
-        writeOutPositionsCircle(majorAxis, minorAxis, boundaryRadius, finalPosArray, "finalPositions_circle.txt");
+        writeOutPositions(finalPosArray, outDir + "finalPositions_circle.txt");
         std::cout << "Done writing final positions to output file.\n";
     }
 
     else if (container == "box")
     {
+        // output directory
+        std::string outDir { "boxSimOut/" };
+        std::filesystem::create_directory(outDir);
+
         double boxHeight;
         double boxWidth;
         std::cout << "What box height do you want?\n";
@@ -105,17 +118,20 @@ int main()
             numParticles = initPosArray.getNumberOfRows();
         }
 
+        // write the simulation notes file
+        writeBoxSimNotes(majorAxis, minorAxis, boxHeight, boxWidth, numMonteCarloSteps, outDir + "boxSimNotes.txt");
+
         // write out the initial positions
-        writeOutPositionsBox(majorAxis, minorAxis, boxHeight, boxWidth, initPosArray, "initialPositions_box.txt");
+        writeOutPositions(initPosArray, outDir + "initialPositions_box.txt");
         std::cout << "Done generating/writing initial positions file.\n";
 
         // start the simulation
         Matrix finalPosArray = boxHardBoundaryMonteCarlo(numParticles, numMonteCarloSteps,
                                                          boxHeight, boxWidth, majorAxis, minorAxis,
-                                                         initPosArray);
+                                                         initPosArray, outDir);
 
         // finished simulation, write out to file
-        writeOutPositionsBox(majorAxis, minorAxis, boxHeight, boxWidth, finalPosArray, "finalPositions_box.txt");
+        writeOutPositions(finalPosArray, outDir + "finalPositions_box.txt");
         std::cout << "Done writing final positions to output file.\n";
     }
 

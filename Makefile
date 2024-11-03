@@ -1,3 +1,7 @@
+# NOTE: only works on Unix/Linux!!! so forget about running make on Windows CMD/Powershell !!!
+# However, Git Bash seems to work fine when compiling the project 
+# To compile, navigate to directory and run `make`
+
 # final program
 TARGET_EXEC := lcsim
 TESTS_EXEC := tests
@@ -6,8 +10,8 @@ TESTS_EXEC := tests
 BUILD_DIR := ./build
 SRC_DIRS := ./src/cpp
 
-# find all C++ files for compiling the liquid crystal simulation executable
-SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -not -path "./src/cpp/tests/*")
+# Unix command to find all .cpp files
+SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -not -path '*tests*')
 
 # object files we want to build
 TARGET_OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)

@@ -6,7 +6,7 @@
 #include <string>
 
 
-// check overlap between two identical ellipses -- alternate method using Vieillard-Baron
+// check overlap between two identical ellipses -- alternate method using criterion from Vieillard-Baron (1970)
 const bool checkEllipseEllipseOverlap(const double x1, const double y1, const double x2, const double y2, 
                                       const double theta1, const double theta2,
                                       const double minorAxis, const double majorAxis, const bool debug=false)
@@ -130,7 +130,7 @@ const bool checkBoundaryOverlapCircle(const double R, const double minorAxis, co
     bool overlap {false};
     double cosine {cos(theta)};
     double sine {sin(theta)};
-    double sine2 {sin(2 * theta)};
+    // double sine2 {sin(2 * theta)};
     
     double A, B, C, D, E, P, R_d, D_d;
     double delta, delta_0;

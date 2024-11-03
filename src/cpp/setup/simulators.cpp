@@ -12,9 +12,9 @@ void tuneAcceptanceRate(const double rate, double& stepXY, double& stepTh)
 {
     /* Helper function for tuning acceptance rates throughout the duration of a simulation
      *
-     * rate - current acceptance rate of Monte Carlo steps
-     * stepXY - maximum step sizes for translation x and y directions
-     * stepTh - maximum angle of rotation
+     * rate     - current acceptance rate of Monte Carlo steps
+     * stepXY   - maximum step sizes for translation x and y directions
+     * stepTh   - maximum angle of rotation
      */
 
     if (rate <= 0.07)
@@ -77,7 +77,7 @@ void tuneAcceptanceRate(const double rate, double& stepXY, double& stepTh)
 
 Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarloSteps,
                                  const double boxHeight, const double boxWidth, const double majorAxis, const double minorAxis,
-                                 Matrix posArray)
+                                 Matrix posArray, const std::string outDir)
 {
     /*
      * Hard particle Monte Carlo with hard box boundary conditions
@@ -125,7 +125,7 @@ Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarlo
         if (stepNo % writeOutPeriod == 0)
         {
             std::string outName { "positionsStep" + std::to_string(stepNo) };
-            writeOutPositionsBox(majorAxis, minorAxis, boxHeight, boxWidth, posArray, outName);
+            writeOutPositions(posArray, outDir + outName);
         }
 
         for (int particleIndex1 {0}; particleIndex1 < numParticles; ++particleIndex1)
@@ -211,9 +211,44 @@ Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarlo
 }
 
 
-Matrix circleHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarloSteps, const double boundaryRadius,
-                                    const double majorAxis, const double minorAxis, Matrix posArray)
+Matrix boxPeriodicBoundaryMonteCarlo(const int numParticles, const int numMonteCarloSteps,
+                                     const double boxHeight, const double boxWidth, const double majorAxis, const double minorAxis,
+                                     Matrix posArray)
 {
+    /*
+     * Hard Particle Monte Carlo with periodic box boundary conditions
+     *
+     * numParticles             - number of particles to simulate
+     * numMonteCarloSteps       - number of Monte Carlo steps to perform
+     * boxHeight                - height of box
+     * boxWidth                 - width of box
+     * majorAxis                - major axis of ellipse particle
+     * minorAxis                - minor axis of ellipse particle
+     * posArray                 - array of particle positions
+     * 
+     */
+
+    return posArray;
+}
+
+
+Matrix circleHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarloSteps, const double boundaryRadius,
+                                    const double majorAxis, const double minorAxis,
+                                    Matrix posArray, const std::string outDir)
+{
+
+    /*
+     * Hard particle Monte Carlo with hard circle boundary conditions
+     * 
+     * numParticles         - number of particles to simulate
+     * numMonteCarloSteps   - number of Monte Carlo steps to perform
+     * boundaryRadius       - radius of circle boundary
+     * majorAxis            - major axis of ellipse particle
+     * minorAxis            - minor axis of ellipse particle
+     * posArray             - array of particle positions
+     * 
+     */
+
     // seed a random number generator
     std::random_device r;
     std::seed_seq seed{r(), r(), r(), r(), r(), r(), r(), r()};
@@ -229,40 +264,45 @@ Matrix circleHardBoundaryMonteCarlo(const int numParticles, const int numMonteCa
 
     int acceptedMoves {0};
     int totalMoves {0};
+    int writeOutPeriod { 1000 };
 
     int tunePeriod { numMonteCarloSteps / 50 };
 
     // main simulation loop
     for (int stepNo {1}; stepNo <= numMonteCarloSteps; ++stepNo)
     {
+
+        // tune displacements to maintain acceptance rate
+        if (stepNo % tunePeriod == 0)
+        {
+            tuneAcceptanceRate(static_cast<double>(acceptedMoves)/totalMoves, stepXY, stepTh);
+        }
+
+        // write out configurations periodically
+        if (stepNo % writeOutPeriod == 0)
+        {
+            std::string outName {"positionsStep" + std::to_string(stepNo) };
+            writeOutPositions(posArray, outDir + outName);
+        }
+
         for (int particleIndex1 {0}; particleIndex1 < numParticles; ++particleIndex1)
         {
-
-            // tune displacements to maintain acceptance rate
-            if (stepNo % tunePeriod == 0)
-            {
-                tuneAcceptanceRate(static_cast<double>(acceptedMoves)/totalMoves, stepXY, stepTh);
-            }
-            
             // generate trial position
             proposedX  = posArray(particleIndex1, 0) + stepXY * uniform_dist(rng);
             proposedY  = posArray(particleIndex1, 1) + stepXY * uniform_dist(rng);
             proposedTh = posArray(particleIndex1, 2) + stepTh * uniform_dist(rng);
-
             // ellipse center cannot be outside (less expensive)
             if (pow(proposedX, 2) + pow(proposedY, 2) > pow(boundaryRadius, 2))
             {
                 totalMoves += 1;
                 continue;
             }
-
             // otherwise, check overlap with boundary (more expensive)
             else if (checkBoundaryOverlapCircle(boundaryRadius, minorAxis, majorAxis, proposedX, proposedY, proposedTh))
             {
                 totalMoves += 1;
                 continue;
             }
-
             bool overlapVar {false};
             for (int particleIndex2 {0}; particleIndex2 < numParticles; ++particleIndex2)
             {
@@ -270,11 +310,9 @@ Matrix circleHardBoundaryMonteCarlo(const int numParticles, const int numMonteCa
                 {
                     continue;
                 }
-
                 double x2 { posArray(particleIndex2, 0) };
                 double y2 { posArray(particleIndex2, 1) };
                 double t2 { posArray(particleIndex2, 2) };
-
                 // ellipse-ellipse overlap detected: exit the loop and reject
                 if (checkEllipseEllipseOverlap(proposedX, proposedY, x2, y2, proposedTh, t2, minorAxis, majorAxis))
                 {
@@ -282,7 +320,6 @@ Matrix circleHardBoundaryMonteCarlo(const int numParticles, const int numMonteCa
                     break;
                 }
             }
-
             if (overlapVar)
             {
                 overlapVar = false;
@@ -316,7 +353,6 @@ Matrix annulusHardBoundaryMonteCarlo(const int numParticles, const int numMonteC
     std::seed_seq seed{r(), r(), r(), r(), r(), r(), r(), r()};
     std::mt19937_64 rng(seed);
     std::uniform_real_distribution<> uniform_dist(-1, 1);
-
 
     return posArray;
 }

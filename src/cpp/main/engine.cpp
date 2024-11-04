@@ -71,7 +71,8 @@ int main()
         {
             numParticles = initPosArray.getNumberOfRows();
         }
-        writeCircleSimNotes(majorAxis, minorAxis, boundaryRadius, numMonteCarloSteps, outDir + "circleSimNotes.txt");
+        writeCircleSimNotes(majorAxis, minorAxis, boundaryRadius, numParticles, numMonteCarloSteps, 
+                            outDir + "circleSimNotes.txt");
         writeOutPositions(initPosArray, outDir + "initialPositions_circle.txt");
         std::cout << "Done generating/writing initial positions file.\n";
         Matrix finalPosArray = circleHardBoundaryMonteCarlo(numParticles, numMonteCarloSteps,
@@ -111,7 +112,8 @@ int main()
             outDir = "boxPeriodicSimOut/"; }
         std::filesystem::create_directory(outDir);
         // write simulation notes file
-        writeBoxSimNotes(majorAxis, minorAxis, boxHeight, boxWidth, numMonteCarloSteps, bType, outDir + "boxSimNotes.txt");
+        writeBoxSimNotes(majorAxis, minorAxis, boxHeight, boxWidth, numParticles, numMonteCarloSteps, bType,
+                         outDir + "boxSimNotes.txt");
         // ready to begin the simulation, start the clock
         begin = std::chrono::steady_clock::now();
         // create the initial positions array

@@ -11,7 +11,7 @@
 
 void writeCircleSimNotes(const double majorAxis, const double minorAxis, 
                          const double boundaryRadius,
-                         const int numMonteCarloSteps,
+                         const int numParticles, const int numMonteCarloSteps,
                          const std::string fileName)
 {
     std::ofstream outFile { fileName };
@@ -19,6 +19,7 @@ void writeCircleSimNotes(const double majorAxis, const double minorAxis,
     outFile << "Semi-major axis: " << majorAxis << "\n";
     outFile << "Semi-minor axis: " << minorAxis << "\n";
     outFile << "Circle radius: " << boundaryRadius << "\n";
+    outFile << "Number of particles: " << numParticles << "\n";
     outFile << "Number of Monte Carlo steps: " << numMonteCarloSteps << "\n";
     outFile.close();
 }
@@ -26,7 +27,7 @@ void writeCircleSimNotes(const double majorAxis, const double minorAxis,
 
 void writeBoxSimNotes(const double majorAxis, const double minorAxis,
                       const double boxHeight, const double boxWidth,
-                      const int numMonteCarloSteps,
+                      const int numParticles, const int numMonteCarloSteps,
                       const std::string boundaryCondition,
                       const std::string fileName)
 {
@@ -36,6 +37,7 @@ void writeBoxSimNotes(const double majorAxis, const double minorAxis,
     outFile << "Semi-minor axis: " << minorAxis << "\n";
     outFile << "Box height: " << boxHeight << "\n";
     outFile << "Box width: " << boxWidth << "\n";
+    outFile << "Number of particles: " << numParticles << "\n";
     outFile << "Number of Monte Carlo steps: " << numMonteCarloSteps << "\n";
     outFile << "Boundary conditions: " << boundaryCondition << "\n";
     outFile.close();

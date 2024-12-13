@@ -1,5 +1,5 @@
 # LiquidCrystals
-Confined 2D liquid crystal simulations and analysis of phase transitions. Liquid crystals are modelled as hard ellipse-shaped particles with excluded volume interactions. 
+Mainly Monte Carlo simulations of confined 2D liquid crystal and tools for analyzing their phase transitions. Liquid crystals are modelled as hard ellipse-shaped particles with excluded volume interactions. 
 
 ![2D periodic box boundary](https://github.com/SyuW/LiquidCrystals/blob/main/images/box_periodic.png)
 

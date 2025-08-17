@@ -5,11 +5,10 @@
 #include <iostream>
 #include <string>
 
-
 // check overlap between two identical ellipses -- alternate method using criterion from Vieillard-Baron (1970)
-const bool checkEllipseEllipseOverlap(const double x1, const double y1, const double x2, const double y2, 
+const bool checkEllipseEllipseOverlap(const double x1, const double y1, const double x2, const double y2,
                                       const double theta1, const double theta2,
-                                      const double minorAxis, const double majorAxis, const bool debug=false)
+                                      const double minorAxis, const double majorAxis, const bool debug = false)
 {
     /*
      * function for checking whether two ellipses overlap, using the Viellard-Baron criterion
@@ -63,11 +62,11 @@ const bool checkEllipseEllipseOverlap(const double x1, const double y1, const do
     aspectRatio = majorAxis / minorAxis;
 
     // alternate method using Vieillard-Baron
-    G = 2 + pow((aspectRatio - 1/aspectRatio) * sin(theta1 - theta2), 2);
+    G = 2 + pow((aspectRatio - 1 / aspectRatio) * sin(theta1 - theta2), 2);
     f_1 = 1 + G - pow(r_dot_u1a / majorAxis, 2) - pow(r_dot_u1b / minorAxis, 2);
     f_2 = 1 + G - pow(r_dot_u2a / majorAxis, 2) - pow(r_dot_u2b / minorAxis, 2);
     contactFunction = 4 * (f_1 * f_1 - 3 * f_2) * (f_2 * f_2 - 3 * f_1) - pow(9 - f_1 * f_2, 2);
-    
+
     if (contactFunction < 1e-8) // very small contact function indicates ellipses are tangent
         overlap = true;
     else
@@ -76,7 +75,7 @@ const bool checkEllipseEllipseOverlap(const double x1, const double y1, const do
     // debug information
     if (debug)
     {
-        std::string_view msg {};
+        std::string_view msg{};
         if (overlap)
         {
             msg = "The two ellipses overlap";
@@ -85,7 +84,6 @@ const bool checkEllipseEllipseOverlap(const double x1, const double y1, const do
         {
             msg = "The two ellipses do not overlap";
         }
-
         std::cout << "-------------------" << "\n";
         std::cout << "Debug option set. Printing out variable info..\n";
         std::cout << "\n";
@@ -108,12 +106,12 @@ const bool checkEllipseEllipseOverlap(const double x1, const double y1, const do
         std::cout << msg << "\n";
         std::cout << "-------------------" << "\n";
     }
-    
+
     return overlap;
 }
 
 const bool checkBoundaryOverlapCircle(const double R, const double minorAxis, const double majorAxis,
-                                      const double xc, const double yc, const double theta, const bool debug=false)
+                                      const double xc, const double yc, const double theta, const bool debug = false)
 {
     /*
      * function for checking ellipse overlap with a circle - for boundary conditions of container
@@ -127,11 +125,11 @@ const bool checkBoundaryOverlapCircle(const double R, const double minorAxis, co
      * return Type     : bool
      */
 
-    bool overlap {false};
-    double cosine {cos(theta)};
-    double sine {sin(theta)};
+    bool overlap{false};
+    double cosine{cos(theta)};
+    double sine{sin(theta)};
     // double sine2 {sin(2 * theta)};
-    
+
     double A, B, C, D, E, P, R_d, D_d;
     double delta, delta_0;
 
@@ -144,22 +142,7 @@ const bool checkBoundaryOverlapCircle(const double R, const double minorAxis, co
     P = 8 * A * C - 3 * pow(B, 2);
     R_d = pow(B, 3) + 8 * D * pow(A, 2) - 4 * A * B * C;
 
-    delta = 256 * pow(A * E, 3)
-            - 192 * (B * D) * pow(A * E, 2)
-            - 128 * pow(A * C * E, 2)
-            + 144 * (C * E) * pow(A * D, 2)
-            - 27 * pow(A, 2) * pow(D, 4)
-            + 144 * (A * C) * pow(B * E, 2)
-            - 6 * (A * E) * pow(B * D, 2)
-            - 80 * (A * B * D * E) * pow(C, 2)
-            + 18 * (A * B * C) * pow(D, 3)
-            + 16 * (A * E) * pow(C, 4)
-            - 4 * A * pow(C, 3) * pow(D, 2)
-            - 27 * pow(E, 2) * pow(B, 4)
-            + 18 * (C * D * E) * pow(B, 3)
-            - 4 * pow(B * D, 3)
-            - 4 * E * pow(B, 2) * pow(C, 3)
-            + pow(B, 2) * pow(C, 2) * pow(D, 2);
+    delta = 256 * pow(A * E, 3) - 192 * (B * D) * pow(A * E, 2) - 128 * pow(A * C * E, 2) + 144 * (C * E) * pow(A * D, 2) - 27 * pow(A, 2) * pow(D, 4) + 144 * (A * C) * pow(B * E, 2) - 6 * (A * E) * pow(B * D, 2) - 80 * (A * B * D * E) * pow(C, 2) + 18 * (A * B * C) * pow(D, 3) + 16 * (A * E) * pow(C, 4) - 4 * A * pow(C, 3) * pow(D, 2) - 27 * pow(E, 2) * pow(B, 4) + 18 * (C * D * E) * pow(B, 3) - 4 * pow(B * D, 3) - 4 * E * pow(B, 2) * pow(C, 3) + pow(B, 2) * pow(C, 2) * pow(D, 2);
 
     delta_0 = pow(C, 2) - 3 * B * D + 12 * A * E;
 
@@ -217,11 +200,11 @@ const bool checkBoundaryOverlapCircle(const double R, const double minorAxis, co
 }
 
 const bool checkBoundaryOverlapLine(const double slope, const double intercept, const double minorAxis, const double majorAxis,
-                                    const double xc, const double yc, const double theta, const bool debug=false)
+                                    const double xc, const double yc, const double theta, const bool debug = false)
 {
-    bool overlap { false };
-    double cosine { cos(theta) };
-    double sine { sin(theta) };
+    bool overlap{false};
+    double cosine{cos(theta)};
+    double sine{sin(theta)};
 
     double A, B, C;
     double delta;
@@ -233,7 +216,7 @@ const bool checkBoundaryOverlapLine(const double slope, const double intercept, 
     delta = pow(B, 2) - 4 * A * C;
 
     if (delta > 0)
-        overlap = true; 
+        overlap = true;
     else
         overlap = false;
 
@@ -265,11 +248,11 @@ const bool checkBoundaryOverlapLine(const double slope, const double intercept, 
 
 // degenerate case for computing ellipse-line overlap when line is vertical
 bool checkBoundaryOverlapVertical(const double xIntercept, const double minorAxis, const double majorAxis,
-                                  const double xc, const double yc, const double theta, const bool debug=false)
+                                  const double xc, const double yc, const double theta, const bool debug = false)
 {
-    bool overlap { false };
-    double cosine { cos(theta) };
-    double sine { sin(theta) };
+    bool overlap{false};
+    double cosine{cos(theta)};
+    double sine{sin(theta)};
     double A, B, C;
     double delta;
 
@@ -339,20 +322,20 @@ bool checkEllipseEllipseOverlap_old(double x1, double y1, double x2, double y2, 
     xi = (pow(aspectRatio, 2) - 1) / (pow(aspectRatio, 2) + 1);
 
     denom = pow(
-                1 - 0.5 * xi * 
-                (
-                    (pow(r_dot_u1 + r_dot_u2, 2) / (1 + xi * u1_dot_u2))
-                    + 
-                    (pow(r_dot_u1 - r_dot_u2, 2) / (1 - xi * u1_dot_u2))
-                ), 
-                0.5);
-    
+        1 - 0.5 * xi *
+                ((pow(r_dot_u1 + r_dot_u2, 2) / (1 + xi * u1_dot_u2)) +
+                 (pow(r_dot_u1 - r_dot_u2, 2) / (1 - xi * u1_dot_u2))),
+        0.5);
+
     w = 2 * minorAxis;
     sigma2D = w / denom;
 
-    if (centerDistance >= sigma2D) {
+    if (centerDistance >= sigma2D)
+    {
         val = false;
-    } else {
+    }
+    else
+    {
         val = true;
     }
 

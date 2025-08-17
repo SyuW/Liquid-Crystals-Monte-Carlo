@@ -67,10 +67,7 @@ int main()
         std::cin >> boundaryRadius;
         begin = std::chrono::steady_clock::now();
         Matrix initPosArray { initializePositionsCircle(numParticles, majorAxis, minorAxis, boundaryRadius) };
-        if (numParticles != initPosArray.getNumberOfRows())
-        {
-            numParticles = initPosArray.getNumberOfRows();
-        }
+        if (numParticles != initPosArray.getNumberOfRows()) {numParticles = initPosArray.getNumberOfRows();}
         writeCircleSimNotes(majorAxis, minorAxis, boundaryRadius, numParticles, numMonteCarloSteps, 
                             outDir + "circleSimNotes.txt");
         writeOutPositions(initPosArray, outDir + "initialPositions_circle.txt");
@@ -111,16 +108,16 @@ int main()
         else if ( bType == "periodic" ) {
             outDir = "boxPeriodicSimOut/"; }
         std::filesystem::create_directory(outDir);
-        // write simulation notes file
-        writeBoxSimNotes(majorAxis, minorAxis, boxHeight, boxWidth, numParticles, numMonteCarloSteps, bType,
-                         outDir + "boxSimNotes.txt");
-        // ready to begin the simulation, start the clock
-        begin = std::chrono::steady_clock::now();
         // create the initial positions array
         Matrix initPosArray { initializePositionsBox(numParticles, majorAxis, minorAxis, boxHeight, boxWidth) };
         writeOutPositions(initPosArray, outDir + "initialPositions_box.txt");
         std::cout << "Done generating/writing initial positions file.\n";
         if (numParticles != initPosArray.getNumberOfRows()) { numParticles = initPosArray.getNumberOfRows(); }
+        // write simulation notes file
+        writeBoxSimNotes(majorAxis, minorAxis, boxHeight, boxWidth, numParticles, numMonteCarloSteps, bType,
+                         outDir + "boxSimNotes.txt");
+        // ready to begin the simulation, start the clock
+        begin = std::chrono::steady_clock::now();
         // start the simulation
         Matrix finalPosArray {initPosArray};
         if ( bType == "hard" ) {

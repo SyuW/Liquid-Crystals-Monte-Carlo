@@ -11,15 +11,6 @@
 
 void tuneAcceptanceRate(const double rate, double &stepXY, double &stepTh)
 {
-    /* Helper function for tuning acceptance rates throughout the duration of a simulation
-     *
-     * rate     - current acceptance rate of Monte Carlo steps
-     * stepXY   - maximum step sizes for translation x and y directions
-     * stepTh   - maximum angle of rotation
-     */
-
-    // if acceptance rate is too high, make step sizes larger
-    // if rate is too low, make them smaller.
     if (rate <= 0.07)
     {
         stepTh *= 0.2;
@@ -81,20 +72,6 @@ Matrix boxHardBoundaryMonteCarlo(const int numParticles, const int numMonteCarlo
                                  const double boxHeight, const double boxWidth, const double majorAxis, const double minorAxis,
                                  Matrix posArray, const std::string outDir)
 {
-    /*
-     * Hard particle Monte Carlo with hard box boundary conditions
-     *
-     * numParticles         - number of particles to simulate
-     * numMonteCarloSteps   - number of Monte Carlo steps to perform
-     * boxHeight            - height of box
-     * boxWidth             - width of box
-     * majorAxis            - major axis of ellipse particle
-     * minorAxis            - minor axis of ellipse particle
-     * posArray             - array of particle positions
-     *
-     */
-
-    // seed a Mersenne Twister random number generator
     std::random_device r;
     std::seed_seq seed{r(), r(), r(), r(), r(), r(), r(), r()};
     std::mt19937_64 rng(seed);
@@ -174,20 +151,6 @@ Matrix boxPeriodicBoundaryMonteCarlo(const int numParticles, const int numMonteC
                                      const double boxHeight, const double boxWidth, const double majorAxis, const double minorAxis,
                                      Matrix posArray, const std::string outDir)
 {
-    /*
-     * Hard Particle Monte Carlo with box periodic boundary conditions
-     *
-     * numParticles             - number of particles to simulate
-     * numMonteCarloSteps       - number of Monte Carlo steps to perform
-     * boxHeight                - height of box
-     * boxWidth                 - width of box
-     * majorAxis                - major axis of ellipse particle
-     * minorAxis                - minor axis of ellipse particle
-     * posArray                 - array of particle positions
-     *
-     */
-
-    // seed a random number generator
     std::random_device r;
     std::seed_seq seed{r(), r(), r(), r(), r(), r(), r(), r()};
     std::mt19937_64 rng(seed);
@@ -269,20 +232,6 @@ Matrix circleHardBoundaryMonteCarlo(const int numParticles, const int numMonteCa
                                     const double majorAxis, const double minorAxis,
                                     Matrix posArray, const std::string outDir)
 {
-
-    /*
-     * Hard particle Monte Carlo with hard circle boundary conditions
-     *
-     * numParticles         - number of particles to simulate
-     * numMonteCarloSteps   - number of Monte Carlo steps to perform
-     * boundaryRadius       - radius of circle boundary
-     * majorAxis            - major axis of ellipse particle
-     * minorAxis            - minor axis of ellipse particle
-     * posArray             - array of particle positions
-     *
-     */
-
-    // seed a random number generator
     std::random_device r;
     std::seed_seq seed{r(), r(), r(), r(), r(), r(), r(), r()};
     std::mt19937_64 rng(seed);

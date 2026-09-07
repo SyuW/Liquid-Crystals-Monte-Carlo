@@ -5,25 +5,10 @@
 #include <iostream>
 #include <string>
 
-// check overlap between two identical ellipses -- alternate method using criterion from Vieillard-Baron (1970)
 const bool checkEllipseEllipseOverlap(const double x1, const double y1, const double x2, const double y2,
                                       const double theta1, const double theta2,
                                       const double minorAxis, const double majorAxis, const bool debug = false)
 {
-    /*
-     * function for checking whether two ellipses overlap, using the Viellard-Baron criterion
-     * Arguments       : double x1
-     *                   double y1
-     *                   double x2
-     *                   double y2
-     *                   double theta1
-     *                   double theta2
-     *                   double minorAxis
-     *                   double majorAxis
-     *                   bool debug
-     * return Type     : bool
-     */
-
     double aspectRatio;
     double contactFunction;
     double f_1, f_2;
@@ -113,18 +98,6 @@ const bool checkEllipseEllipseOverlap(const double x1, const double y1, const do
 const bool checkBoundaryOverlapCircle(const double R, const double minorAxis, const double majorAxis,
                                       const double xc, const double yc, const double theta, const bool debug = false)
 {
-    /*
-     * function for checking ellipse overlap with a circle - for boundary conditions of container
-     * Arguments       : double R
-     *                   double minorAxis
-     *                   double majorAxis
-     *                   double xc
-     *                   double yc
-     *                   double theta
-     *                   bool debug
-     * return Type     : bool
-     */
-
     bool overlap{false};
     double cosine{cos(theta)};
     double sine{sin(theta)};
@@ -246,7 +219,6 @@ const bool checkBoundaryOverlapLine(const double slope, const double intercept, 
     return overlap;
 }
 
-// degenerate case for computing ellipse-line overlap when line is vertical
 bool checkBoundaryOverlapVertical(const double xIntercept, const double minorAxis, const double majorAxis,
                                   const double xc, const double yc, const double theta, const bool debug = false)
 {
